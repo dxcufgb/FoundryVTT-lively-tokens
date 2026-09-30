@@ -1,0 +1,64 @@
+<div class="dxlt-body">
+  <section class="dxlt-left">
+    <div class="dxlt-preview"></div>
+    <p class="dxlt-target {{#unless canApply}}none{{/unless}}"><i class="fa-solid fa-user-large"></i> {{targetText}}</p>
+    <p class="hint">{{localize "DXLT.App.PreviewHint"}}</p>
+  </section>
+
+  <section class="dxlt-right">
+    {{#if partners.length}}
+    <div class="dxlt-partners">
+      <span>{{localize "DXLT.App.AlsoHere"}}</span>
+      {{#each partners}}
+      <button type="button" data-action="partner" data-index="{{index}}"><i class="{{icon}}"></i> {{title}}</button>
+      {{/each}}
+    </div>
+    {{/if}}
+    {{#if partnerModules.length}}
+    <p class="hint dxlt-partners">{{localize "DXLT.App.PartnerInstalled"}} {{#each partnerModules}}<strong>{{this}}</strong> {{/each}}</p>
+    {{/if}}
+
+    <h3>{{localize "DXLT.App.Design"}}</h3>
+    <div class="dxlt-designs">
+      {{#each designs}}
+      <button type="button" data-action="design" data-design="{{id}}" class="{{#if active}}active{{/if}}" data-tooltip="{{label}}">
+        <i class="{{icon}}"></i><span>{{label}}</span>
+      </button>
+      {{/each}}
+    </div>
+
+    <h3>{{localize "DXLT.App.Style"}} <small>{{designLabel}}</small></h3>
+    <div class="dxlt-styles">
+      {{#each styles}}
+      <button type="button" data-action="style" data-style="{{id}}" class="{{#if active}}active{{/if}}">{{label}}</button>
+      {{/each}}
+    </div>
+
+    <h3>{{localize "DXLT.App.Tune"}}</h3>
+    <div class="dxlt-sliders">
+      {{#each sliders}}
+      <label>{{localize label}}</label>
+      <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}">
+      <output data-for="{{name}}">{{text}}</output>
+      {{/each}}
+      <label>{{localize "DXLT.App.Color"}}</label>
+      <span class="dxlt-color">
+        <input type="checkbox" name="useColor" {{checked useColor}} data-tooltip="{{localize 'DXLT.App.ColorHint'}}">
+        <input type="color" name="color" value="{{color}}" {{#unless useColor}}disabled{{/unless}}>
+      </span>
+      <output></output>
+    </div>
+
+    <label class="dxlt-proto">
+      <input type="checkbox" name="prototype" {{checked prototype}}>
+      {{localize "DXLT.App.Prototype"}}
+    </label>
+  </section>
+</div>
+
+<footer class="form-footer dxlt-footer">
+  <button type="button" data-action="copy" {{#unless canApply}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.CopyHint'}}"><i class="fa-solid fa-eye-dropper"></i> {{localize "DXLT.App.Copy"}}</button>
+  <button type="button" data-action="reset"><i class="fa-solid fa-rotate-left"></i> {{localize "DXLT.App.Reset"}}</button>
+  <button type="button" data-action="remove" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-trash"></i> {{localize "DXLT.App.Remove"}}</button>
+  <button type="button" data-action="apply" class="bright" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-check"></i> {{localize "DXLT.App.Apply"}}</button>
+</footer>
