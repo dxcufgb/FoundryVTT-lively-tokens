@@ -57,8 +57,9 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     if (actor && !actor.isOwner) return null;
     if (this.instance) this.instance.setActor(actor);
     else this.instance = new this({ actor });
+    // Only a window that is already on screen has an element to raise; a new one opens on top anyway.
+    if (this.instance.rendered) this.instance.bringToFront();
     this.instance.render({ force: true });
-    this.instance.bringToFront?.();
     return this.instance;
   }
 
