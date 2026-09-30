@@ -1,0 +1,51 @@
+{
+  "DXLT": {
+    "Control": {
+      "Title": "Lively tokens: animated rings"
+    },
+    "Settings": {
+      "Players": {
+        "Name": "Players can give their tokens rings",
+        "Hint": "Players may open the Animated Border window and put rings on tokens they own. The GM can always."
+      },
+      "Enabled": {
+        "Name": "Show animated rings",
+        "Hint": "Turn the rings off on this computer only, for example if the canvas is slow."
+      },
+      "Quality": {
+        "Name": "Ring detail",
+        "Hint": "How many particles each ring uses on this computer.",
+        "High": "High",
+        "Medium": "Medium",
+        "Low": "Low"
+      }
+    },
+    "App": {
+      "Title": "Lively tokens: Animated Border",
+      "Design": "Design",
+      "Style": "Style",
+      "Tune": "Fine-tune",
+      "Size": "Size",
+      "Speed": "Speed",
+      "Opacity": "Opacity",
+      "Density": "Particles",
+      "Color": "Own colour",
+      "ColorHint": "Recolour the ring around one colour of your choice",
+      "Prototype": "Also for new tokens of the same actor (prototype token)",
+      "Apply": "Apply to selected",
+      "Remove": "Remove ring",
+      "Copy": "Copy from token",
+      "CopyHint": "Load the ring of the first selected token into the editor",
+      "Reset": "Reset",
+      "Selected": "Selected: {names}",
+      "NoneSelected": "Select one or more of your tokens to apply the ring.",
+      "PreviewHint": "The ring grows with the creature's size on the map.",
+      "Applied": "Ring applied to {n} token(s).",
+      "Removed": "Ring removed from {n} token(s).",
+      "NoRing": "The selected token has no ring yet.",
+      "NotAllowed": "Only the GM can assign animated rings in this world.",
+      "AlsoHere": "Also in this window:",
+      "PartnerInstalled": "Other animated border module active:"
+    }
+  }
+}
