@@ -1,0 +1,65 @@
+# Builds and publishes the module whenever a GitHub Release is published.
+#
+# How to release a new version:
+#   1. Push your changes.
+#   2. On GitHub: Releases -> "Draft a new release" -> create a tag like v1.0.1
+#      (the version number in module.json is taken from this tag).
+#   3. Click "Publish release". This workflow then attaches module.json and
+#      module.zip to the release.
+#
+# The manifest link people install from always points at the newest release:
+#   https://github.com/<owner>/<repo>/releases/latest/download/module.json
+
+name: Release module
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Work out version and URLs
+        id: meta
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "url=${REPO_URL}" >> "$GITHUB_OUTPUT"
+          echo "manifest=${REPO_URL}/releases/latest/download/module.json" >> "$GITHUB_OUTPUT"
+          echo "download=${REPO_URL}/releases/download/${TAG}/module.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Fill in module.json
+        run: |
+          jq \
+            --arg version  "${{ steps.meta.outputs.version }}" \
+            --arg url      "${{ steps.meta.outputs.url }}" \
+            --arg manifest "${{ steps.meta.outputs.manifest }}" \
+            --arg download "${{ steps.meta.outputs.download }}" \
+            '.version = $version | .url = $url | .manifest = $manifest | .download = $download
+             | .bugs = ($url + "/issues") | .readme = ($url + "#readme")' \
+            module.json > module.tmp.json
+          mv module.tmp.json module.json
+          cat module.json
+
+      - name: Build module.zip
+        run: |
+          zip -r module.zip . \
+            -x ".git/*" ".github/*" ".gitignore" ".gitattributes" "module.zip" "*.tmp.json"
+          unzip -l module.zip
+
+      - name: Attach files to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module.json
+            module.zip
