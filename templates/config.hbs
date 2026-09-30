@@ -1,7 +1,12 @@
 <div class="dxlt-body">
   <section class="dxlt-left">
     <div class="dxlt-preview"></div>
+    {{#if actor}}
+    <p class="dxlt-target dxlt-actor"><img src="{{actor.img}}" alt=""> {{targetText}}</p>
+    <button type="button" class="dxlt-use-selection" data-action="useSelection"><i class="fa-solid fa-object-group"></i> {{localize "DXLT.App.UseSelection"}}</button>
+    {{else}}
     <p class="dxlt-target {{#unless canApply}}none{{/unless}}"><i class="fa-solid fa-user-large"></i> {{targetText}}</p>
+    {{/if}}
     <p class="hint">{{localize "DXLT.App.PreviewHint"}}</p>
   </section>
 
@@ -50,14 +55,14 @@
     </div>
 
     <label class="dxlt-proto">
-      <input type="checkbox" name="prototype" {{checked prototype}}>
+      <input type="checkbox" name="prototype" {{checked prototype}} {{#if prototypeLocked}}disabled{{/if}}>
       {{localize "DXLT.App.Prototype"}}
     </label>
   </section>
 </div>
 
 <footer class="form-footer dxlt-footer">
-  <button type="button" data-action="copy" {{#unless canApply}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.CopyHint'}}"><i class="fa-solid fa-eye-dropper"></i> {{localize "DXLT.App.Copy"}}</button>
+  <button type="button" data-action="copy" {{#unless canCopy}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.CopyHint'}}"><i class="fa-solid fa-eye-dropper"></i> {{localize "DXLT.App.Copy"}}</button>
   <button type="button" data-action="reset"><i class="fa-solid fa-rotate-left"></i> {{localize "DXLT.App.Reset"}}</button>
   <button type="button" data-action="remove" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-trash"></i> {{localize "DXLT.App.Remove"}}</button>
   <button type="button" data-action="apply" class="bright" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-check"></i> {{localize "DXLT.App.Apply"}}</button>

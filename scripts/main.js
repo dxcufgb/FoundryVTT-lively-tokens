@@ -7,7 +7,8 @@
  * with no extra work (the same way Foundry's own combat turn marker works).
  *
  * API: game.modules.get("dxcufgbs-lively-tokens").api
- *   .open()                      open the Animated Border window
+ *   .open()                      open the Animated Border window (selected tokens)
+ *   .open({actor})               open it for one actor: its tokens on the scene and its prototype token
  *   .setRing(token, cfg)         give a token (Token or TokenDocument) a ring
  *   .clearRing(token)            remove it
  *   .designs                     available designs and styles
@@ -53,7 +54,7 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "lastConfig", { scope: "client", config: false, type: Object, default: {} });
 
   const mod = game.modules.get(MODULE_ID);
-  if (mod) mod.api = { open: () => LivelyTokensConfig.open(), setRing, clearRing, designs: DESIGNS };
+  if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, designs: DESIGNS };
 });
 
 export function canUse() {
@@ -223,5 +224,100 @@ export function tokenRing(token) {
   return f ? normalizeConfig(f) : null;
 }
 
+/** The world actor behind an actor (an unlinked token's synthetic actor stores its prototype there). */
+export function baseActor(actor) {
+  return actor?.isToken ? (game.actors.get(actor.id) ?? actor) : actor;
+}
+
+/** The actor's tokens on the current scene that the user may change. */
+export function actorTokens(actor) {
+  return (actor?.getActiveTokens?.() ?? []).filter(t => t.document?.isOwner);
+}
+
+/** The ring stored on the actor's prototype token, if any. */
+export function prototypeRing(actor) {
+  const f = baseActor(actor)?.prototypeToken?.flags?.[MODULE_ID]?.[FLAG];
+  return f ? normalizeConfig(f) : null;
+}
+
+/**
+ * Give an actor a ring: its tokens on the current scene and, if asked (or if it has none there),
+ * its prototype token, so new tokens get it too. Returns the number of tokens changed.
+ */
+export async function setActorRing(actor, cfg, { prototype = true } = {}) {
+  const data = normalizeConfig(cfg);
+  const tokens = actorTokens(actor);
+  await Promise.all(tokens.map(t => setRing(t, data)));
+  const base = baseActor(actor);
+  if ((prototype || !tokens.length) && base?.isOwner) await base.update({ [`prototypeToken.flags.${MODULE_ID}.${FLAG}`]: data });
+  return tokens.length;
+}
+
+export async function clearActorRing(actor, { prototype = true } = {}) {
+  const tokens = actorTokens(actor);
+  await Promise.all(tokens.map(t => clearRing(t)));
+  const base = baseActor(actor);
+  if ((prototype || !tokens.length) && base?.isOwner) await base.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
+  return tokens.length;
+}
+
 // Keep the window's selection list current.
 Hooks.on("controlToken", () => LivelyTokensConfig.instance?.onSelectionChanged());
+
+/* -------------------------------------------- */
+/*  Access points                               */
+/* -------------------------------------------- */
+
+const SHEET_ACTION = "dxltRing";
+
+function canOpenFor(actor) {
+  return !!actor && actor.isOwner && canUse();
+}
+
+// Character sheets (ApplicationV2, e.g. dnd5e 5.x): an entry in the header controls menu (the "..." button).
+Hooks.on("getHeaderControlsDocumentSheetV2", (app, controls) => {
+  const actor = app.document;
+  if (actor?.documentName !== "Actor" || !canOpenFor(actor)) return;
+  if (controls.some(c => c.action === SHEET_ACTION)) return;
+  app.options.actions[SHEET_ACTION] ??= function () { LivelyTokensConfig.open({ actor: this.document }); };
+  controls.push({ action: SHEET_ACTION, icon: "fa-solid fa-ring", label: "DXLT.Sheet.Control" });
+});
+
+// Character sheets still built on the legacy Application class: a header button.
+Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
+  const actor = app.actor ?? app.document;
+  if (!canOpenFor(actor)) return;
+  buttons.unshift({
+    label: "DXLT.Sheet.Button", class: "dxlt-ring", icon: "fa-solid fa-ring",
+    onclick: () => LivelyTokensConfig.open({ actor })
+  });
+});
+
+// Actors sidebar: right-click an actor.
+Hooks.on("getActorContextOptions", (app, options) => {
+  const actorOf = li => game.actors.get((li?.dataset ?? li?.[0]?.dataset)?.entryId);
+  options.push({
+    name: "DXLT.Sheet.Control",
+    icon: '<i class="fa-solid fa-ring"></i>',
+    condition: li => canOpenFor(actorOf(li)),
+    callback: li => LivelyTokensConfig.open({ actor: actorOf(li) })
+  });
+});
+
+// Token HUD: a ring button in the left column, for the selected token(s).
+Hooks.on("renderTokenHUD", (hud, html) => {
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  const col = root?.querySelector(".col.left");
+  if (!col || !canUse() || !hud.object?.document?.isOwner) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.classList.add("control-icon", "dxlt-hud");
+  btn.dataset.tooltip = game.i18n.localize("DXLT.Control.Title");
+  btn.innerHTML = '<i class="fa-solid fa-ring"></i>';
+  btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    LivelyTokensConfig.open();
+  });
+  col.appendChild(btn);
+});

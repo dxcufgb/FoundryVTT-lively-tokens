@@ -36,3 +36,6 @@
 .dxlt-config .dxlt-footer { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
 .dxlt-config .dxlt-footer button { flex: 1; }
 .dxlt-config .dxlt-footer button.bright { flex: 1.5; }
+.dxlt-config .dxlt-actor { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+.dxlt-config .dxlt-actor img { width: 28px; height: 28px; border: none; border-radius: 4px; object-fit: cover; }
+.dxlt-config .dxlt-use-selection { width: auto; padding: 0 0.7rem; font-size: var(--font-size-12, 12px); }

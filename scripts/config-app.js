@@ -1,11 +1,17 @@
 /**
  * The Animated Border window: pick a design and style, tune it, preview it live
  * around the selected token, and apply it to the selected tokens.
+ *
+ * Opened with an actor (from its character sheet, the Actors sidebar or the API) the window works
+ * on that actor instead: its tokens on the current scene and its prototype token.
  */
 
 import { DESIGNS, normalizeConfig, LivelyRing } from "./ring.js";
 import { MODULE_ID } from "./constants.js";
-import { canUse, partners, partnerModules, setRing, clearRing, tokenRing, textures } from "./main.js";
+import {
+  canUse, partners, partnerModules, setRing, clearRing, tokenRing, textures,
+  actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing
+} from "./main.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -26,7 +32,8 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       remove: LivelyTokensConfig.#onRemove,
       copy: LivelyTokensConfig.#onCopy,
       reset: LivelyTokensConfig.#onReset,
-      partner: LivelyTokensConfig.#onPartner
+      partner: LivelyTokensConfig.#onPartner,
+      useSelection: LivelyTokensConfig.#onUseSelection
     }
   };
 
@@ -37,20 +44,28 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   /** The open window, if any. */
   static instance = null;
 
-  static open() {
+  /**
+   * Open the window.
+   * @param {object} [opts]
+   * @param {Actor} [opts.actor]  work on this actor (its tokens and prototype token) instead of the selected tokens
+   */
+  static open({ actor = null } = {}) {
     if (!canUse()) {
       ui.notifications.warn(game.i18n.localize("DXLT.App.NotAllowed"));
       return null;
     }
-    this.instance ??= new this();
+    if (actor && !actor.isOwner) return null;
+    if (this.instance) this.instance.setActor(actor);
+    else this.instance = new this({ actor });
     this.instance.render({ force: true });
+    this.instance.bringToFront?.();
     return this.instance;
   }
 
-  constructor(options) {
+  constructor({ actor = null, ...options } = {}) {
     super(options);
-    const selected = this.#targets()[0];
-    this.cfg = normalizeConfig(tokenRing(selected) ?? game.settings.get(MODULE_ID, "lastConfig"));
+    this.actor = actor;
+    this.cfg = this.#initialConfig();
     this.prototype = true;
     this.previewApp = null;
     this.previewRing = null;
@@ -58,9 +73,24 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     this.previewSrc = null;
   }
 
-  /** Tokens the user has selected and may change. */
+  /** Tokens the window works on: the actor's tokens on this scene, or the selected tokens the user may change. */
   #targets() {
+    if (this.actor) return actorTokens(this.actor);
     return (canvas?.tokens?.controlled ?? []).filter(t => t.document?.isOwner);
+  }
+
+  /** The ring to start the editor with: the target's own ring, else the last one used. */
+  #initialConfig() {
+    const own = tokenRing(this.#targets()[0]) ?? (this.actor ? prototypeRing(this.actor) : null);
+    return normalizeConfig(own ?? game.settings.get(MODULE_ID, "lastConfig"));
+  }
+
+  /** Switch between an actor and the token selection (null) while the window is open. */
+  setActor(actor) {
+    if ((actor ?? null) === this.actor) return;
+    this.actor = actor ?? null;
+    this.cfg = this.#initialConfig();
+    this.previewSrc = null;
   }
 
   /* -------------------------------------------- */
@@ -70,6 +100,16 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   async _prepareContext(options) {
     const targets = this.#targets();
     const design = DESIGNS[this.cfg.design];
+    const names = list => list.slice(0, 4).join(", ") + (list.length > 4 ? ", …" : "");
+    let targetText;
+    if (this.actor) {
+      targetText = game.i18n.format(targets.length ? "DXLT.App.ForActor" : "DXLT.App.ForActorNoTokens",
+        { name: this.actor.name, n: targets.length });
+    } else {
+      targetText = targets.length
+        ? game.i18n.format("DXLT.App.Selected", { names: names(targets.map(t => t.name)) })
+        : game.i18n.localize("DXLT.App.NoneSelected");
+    }
     const pct = v => Math.round(v * 100);
     return {
       designs: Object.entries(DESIGNS).map(([id, d]) => ({ id, label: d.label, icon: d.icon, active: id === this.cfg.design })),
@@ -84,12 +124,13 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       ],
       useColor: !!this.cfg.color,
       color: this.cfg.color ?? "#8a5aff",
-      prototype: this.prototype,
+      prototype: this.prototype || (!!this.actor && !targets.length),
+      prototypeLocked: !!this.actor && !targets.length,
+      actor: this.actor ? { name: this.actor.name, img: this.actor.img } : null,
       targets: targets.map(t => t.name),
-      targetText: targets.length
-        ? game.i18n.format("DXLT.App.Selected", { names: targets.map(t => t.name).slice(0, 4).join(", ") + (targets.length > 4 ? ", …" : "") })
-        : game.i18n.localize("DXLT.App.NoneSelected"),
-      canApply: targets.length > 0,
+      targetText,
+      canApply: this.actor ? baseActor(this.actor)?.isOwner ?? false : targets.length > 0,
+      canCopy: targets.length > 0 || (!!this.actor && !!prototypeRing(this.actor)),
       partners: partners().map((p, i) => ({ index: i, title: p.title, icon: p.icon || "fa-solid fa-circle-notch" })),
       partnerModules: partners().length ? [] : partnerModules().map(m => m.title)
     };
@@ -148,8 +189,9 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   async #updatePreviewToken() {
-    const token = this.#targets()[0] ?? canvas?.tokens?.controlled?.[0];
-    const src = token?.document?.texture?.src ?? CONST.DEFAULT_TOKEN;
+    const token = this.#targets()[0] ?? (this.actor ? null : canvas?.tokens?.controlled?.[0]);
+    const src = token?.document?.texture?.src
+      ?? baseActor(this.actor)?.prototypeToken?.texture?.src ?? this.actor?.img ?? CONST.DEFAULT_TOKEN;
     if (src === this.previewSrc && this.previewToken) return;
     this.previewSrc = src;
     this.previewToken?.destroy();
@@ -179,7 +221,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
 
   /** Called when the token selection changes on the canvas. */
   onSelectionChanged() {
-    if (!this.rendered) return;
+    if (!this.rendered || this.actor) return;
     clearTimeout(this._selTimer);
     this._selTimer = setTimeout(() => this.render({ parts: ["main"] }), 50);
   }
@@ -213,6 +255,12 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   static async #onApply() {
+    if (this.actor) {
+      const cfg = normalizeConfig(this.cfg);
+      const n = await setActorRing(this.actor, cfg, { prototype: this.prototype });
+      await game.settings.set(MODULE_ID, "lastConfig", cfg);
+      return ui.notifications.info(game.i18n.format(n ? "DXLT.App.Applied" : "DXLT.App.AppliedPrototype", { n, name: this.actor.name }));
+    }
     const targets = this.#targets();
     if (!targets.length) return ui.notifications.warn(game.i18n.localize("DXLT.App.NoneSelected"));
     const cfg = normalizeConfig(this.cfg);
@@ -222,6 +270,10 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   static async #onRemove() {
+    if (this.actor) {
+      const n = await clearActorRing(this.actor, { prototype: this.prototype });
+      return ui.notifications.info(game.i18n.format(n ? "DXLT.App.Removed" : "DXLT.App.RemovedPrototype", { n, name: this.actor.name }));
+    }
     const targets = this.#targets();
     if (!targets.length) return ui.notifications.warn(game.i18n.localize("DXLT.App.NoneSelected"));
     await Promise.all(targets.map(t => clearRing(t, { prototype: this.prototype })));
@@ -229,7 +281,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   static #onCopy() {
-    const cfg = tokenRing(this.#targets()[0]);
+    const cfg = tokenRing(this.#targets()[0]) ?? (this.actor ? prototypeRing(this.actor) : null);
     if (!cfg) return ui.notifications.info(game.i18n.localize("DXLT.App.NoRing"));
     this.cfg = cfg;
     this.render({ parts: ["main"] });
@@ -237,6 +289,12 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
 
   static #onReset() {
     this.cfg = normalizeConfig({ design: this.cfg.design, style: this.cfg.style });
+    this.render({ parts: ["main"] });
+  }
+
+  /** Leave the actor and work on the selected tokens again. */
+  static #onUseSelection() {
+    this.setActor(null);
     this.render({ parts: ["main"] });
   }
 
