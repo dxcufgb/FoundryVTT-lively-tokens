@@ -1,0 +1,38 @@
+/* Dxcufgb's lively tokens - Animated Border window */
+.dxlt-config .window-content { padding: 0.75rem; }
+.dxlt-config .dxlt-body { display: grid; grid-template-columns: 320px 1fr; gap: 1rem; }
+.dxlt-config .dxlt-left { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+.dxlt-config .dxlt-preview {
+  width: 320px; height: 320px; border-radius: 8px; overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, #3a4032 0%, #22261e 70%, #181a15 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.dxlt-config .dxlt-preview canvas { display: block; width: 320px; height: 320px; }
+.dxlt-config .dxlt-target { margin: 0; font-weight: 600; text-align: center; }
+.dxlt-config .dxlt-target.none { opacity: 0.7; font-weight: normal; }
+.dxlt-config .hint { margin: 0; font-size: var(--font-size-12, 12px); opacity: 0.75; text-align: center; }
+.dxlt-config h3 { margin: 0.4rem 0 0.3rem; font-size: var(--font-size-14, 14px); border-bottom: 1px solid var(--color-border, rgba(255,255,255,0.15)); }
+.dxlt-config h3 small { font-weight: normal; opacity: 0.6; margin-left: 0.3rem; }
+.dxlt-config .dxlt-designs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.3rem; }
+.dxlt-config .dxlt-designs button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
+  height: 3.6rem; padding: 0.2rem; font-size: var(--font-size-11, 11px); line-height: 1.1; white-space: normal;
+}
+.dxlt-config .dxlt-designs button i { font-size: 1.3rem; margin: 0; }
+.dxlt-config .dxlt-styles { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.dxlt-config .dxlt-styles button { flex: 0 0 auto; width: auto; padding: 0 0.7rem; }
+.dxlt-config .dxlt-designs button.active,
+.dxlt-config .dxlt-styles button.active {
+  border-color: var(--color-warm-2, #ff6400); box-shadow: 0 0 6px var(--color-warm-2, #ff6400);
+  background: rgba(255, 140, 40, 0.18);
+}
+.dxlt-config .dxlt-sliders { display: grid; grid-template-columns: 6.5rem 1fr 3rem; gap: 0.35rem 0.5rem; align-items: center; }
+.dxlt-config .dxlt-sliders output { text-align: right; font-variant-numeric: tabular-nums; }
+.dxlt-config .dxlt-color { display: flex; align-items: center; gap: 0.4rem; }
+.dxlt-config .dxlt-color input[type=color] { width: 3rem; height: 1.6rem; padding: 0; border: none; background: none; }
+.dxlt-config .dxlt-proto { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem; }
+.dxlt-config .dxlt-partners { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.3rem; text-align: left; }
+.dxlt-config .dxlt-partners button { width: auto; flex: 0 0 auto; }
+.dxlt-config .dxlt-footer { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+.dxlt-config .dxlt-footer button { flex: 1; }
+.dxlt-config .dxlt-footer button.bright { flex: 1.5; }
