@@ -45,7 +45,16 @@
       "NoRing": "The selected token has no ring yet.",
       "NotAllowed": "Only the GM can assign animated rings in this world.",
       "AlsoHere": "Also in this window:",
-      "PartnerInstalled": "Other animated border module active:"
+      "PartnerInstalled": "Other animated border module active:",
+      "ForActor": "{name}: {n} token(s) on this scene",
+      "ForActorNoTokens": "{name}: no tokens on this scene, the ring goes on the prototype token",
+      "UseSelection": "Use selected tokens instead",
+      "AppliedPrototype": "Ring stored on {name}'s prototype token.",
+      "RemovedPrototype": "Ring removed from {name}'s prototype token."
+    },
+    "Sheet": {
+      "Control": "Animated token ring",
+      "Button": "Ring"
     }
   }
 }
