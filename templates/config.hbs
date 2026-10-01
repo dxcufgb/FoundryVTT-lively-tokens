@@ -21,6 +21,11 @@
         <button type="button" data-action="deletePreset" {{#unless hasPreset}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.DeleteHint'}}"><i class="fa-solid fa-trash"></i></button>
       </div>
       <p class="hint">{{localize "DXLT.App.SavedHint"}}</p>
+      <div class="dxlt-transfer">
+        <button type="button" data-action="exportRing" data-tooltip="{{localize 'DXLT.Transfer.ExportHint'}}"><i class="fa-solid fa-file-export"></i> {{localize "DXLT.Transfer.Export"}}</button>
+        <button type="button" data-action="importRing" data-tooltip="{{localize 'DXLT.Transfer.ImportHint'}}"><i class="fa-solid fa-file-import"></i> {{localize "DXLT.Transfer.Import"}}</button>
+        <input type="file" name="ringFile" accept=".json,application/json" hidden>
+      </div>
     </section>
 
     <section class="dxlt-right">
