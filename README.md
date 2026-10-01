@@ -46,6 +46,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   Uploading needs Foundry's *Upload New Files* permission; players without it can still pick an image that is already on the server, or type its path or URL.
 - **Effects for every layer:** *Glow* (a soft halo in the layer's own colours), *Pulse* (breathes in and out), *Rainbow* (cycles through all colours) and *Spin* (turns the whole layer either way).
 - **Saved effects:** save the whole stack under a name and load it again later. Saved effects belong to your user, so they follow you to any computer.
+- **Export / import:** **Export to file** saves the ring in the editor as a single `.lively-ring.json` file, with every image of your own packed inside it. **Import from file** in any other world or Foundry adds those images to that world (in `worlds/<world>/dxcufgbs-lively-tokens/imported/`, each image only once), loads the ring into the editor and adds it to your saved effects. Importing images needs permission to upload files; otherwise ask the GM to import it. PNG, WebP, JPEG, GIF and AVIF images are packed; SVG images and web addresses that don't allow it are kept as links only.
 
 - **Auto-scaling:** rings grow with the token's size (Medium, Large, Huge, ...), particles too.
 - **Token Controls button** (ring icon) opens the **Animated Border** window:
@@ -86,6 +87,8 @@ api.setRing(token, { layers: [                                // several, bottom
 api.clearRing(token);
 api.designs;                                                  // all designs and styles
 api.presets();                                                // your saved effects
+await api.exportRing(cfg, "My ring");                         // download it as one file, images included
+const { name, cfg: ring } = await api.importRing(file);       // read such a file (a File or its text)
 ```
 
 ## License
