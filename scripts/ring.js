@@ -480,6 +480,49 @@ vec4 ring(vec2 p, float r, float a, float t) {
   float n = fbm(q * 4.0);
   float d = exp(-pow((r - 1.22) / 0.10, 2.0)) * smoothstep(0.35, 0.8, n) * 0.55;
   return vec4(mix(uC, uB, n), d);
+}`,
+  // Daggers circling the token tip-first: bevelled blades, crossguard, wrapped grip, pommel.
+  knives: `
+float sdBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+vec4 ring(vec2 p, float r, float a, float t) {
+  float N = 8.0, R0 = 1.2;
+  float aa = a - t * 0.55;
+  vec2 lp = r * vec2(cos(aa), sin(aa));          // position in the turning frame
+  vec3 col = vec3(0.0);
+  float al = 0.0, trail = 0.0, glint = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float cell = floor((aa / TAU + 0.5) * N) + float(k) - 1.0;
+    float id = mod(cell, N);
+    float ca = (cell + 0.5) / N * TAU - PI;
+    vec2 n = vec2(cos(ca), sin(ca));
+    vec2 q = (lp - n * (R0 + 0.012 * sin(t * 2.0 + id * 1.7))) / 1.5;   // knife drawn 1.5x
+    vec2 dir = cos(0.28) * vec2(-n.y, n.x) + sin(0.28) * n;   // tip forward, tilted a little outward
+    float x = dot(q, dir), y = dot(q, vec2(-dir.y, dir.x));
+    // blade from the guard (x = -0.06) to the tip (x = 0.18)
+    float bw = 0.034 * sqrt(clamp((0.18 - x) / 0.12, 0.0, 1.0));
+    float blade = smoothstep(0.003, -0.003, abs(y) - bw) * step(-0.06, x) * step(x, 0.18);
+    float across = abs(y) / max(bw, 0.001);
+    vec3 bc = mix(uB, uA, smoothstep(0.35, 0.95, across));
+    bc = mix(bc, uC * 1.2 + uB * 0.3, smoothstep(0.3, 0.0, abs(y) / 0.034) * step(x, 0.08) * 0.6);
+    bc += uA * pow(max(0.0, sin(x * 18.0 - t * 3.0 + id * 2.3)), 16.0) * 0.8;
+    bc *= y > 0.0 ? 1.08 : 0.82;
+    float guard = smoothstep(0.003, -0.003, sdBox(vec2(x + 0.065, y), vec2(0.012, 0.062)));
+    float grip = smoothstep(0.003, -0.003, sdBox(vec2(x + 0.12, y), vec2(0.045, 0.018)));
+    float pommel = smoothstep(0.003, -0.003, length(vec2(x + 0.175, y)) - 0.024);
+    vec3 hilt = mix(uB, vec3(0.78, 0.58, 0.26), uP1) * (0.75 + 0.45 * smoothstep(-0.05, 0.05, y));
+    vec3 wrap = mix(uC, vec3(0.20, 0.11, 0.06), 0.6) * (0.6 + 0.4 * step(0.5, fract((x + 0.12) * 60.0)));
+    float cov = max(max(blade, guard), max(grip, pommel));
+    vec3 kc = mix(bc, wrap, grip);
+    kc = mix(kc, hilt, max(guard, pommel));
+    col = mix(col, kc, cov);
+    al = max(al, cov);
+    trail += exp(-y * y / 0.0003) * smoothstep(-0.42, -0.2, x) * step(x, -0.2) * 0.25;
+    float g = pow(max(0.0, sin(t * 1.3 + id * 2.1)), 40.0);
+    float dx = abs(x - 0.15), dy = abs(y);
+    glint += (exp(-dx * 60.0) * exp(-dy * 400.0) + exp(-dy * 60.0) * exp(-dx * 400.0)) * g;
+  }
+  col = mix(uA, col, clamp(al * 3.0, 0.0, 1.0)) + uA * glint;
+  return vec4(col, max(al, max(trail, glint)));
 }`
 };
 
@@ -748,6 +791,19 @@ export const DESIGNS = {
       jade: { label: "Jade", colors: ["#e0fff0", "#3ab87a", "#06301a"],
         swarms: [{ tex: "rock", count: 6, mode: "orbit", radius: [1.2, 1.3], size: [0.12, 0.18], speed: 0.35, colors: ["#5ad89a", "#3ab87a"], blend: "normal", alpha: 1, spin: 0.6 },
                  { tex: "glow", count: 8, mode: "orbit", radius: [1.14, 1.34], size: [0.03, 0.05], speed: 0.5, colors: ["#a8ffd0"], blend: "add", alpha: 0.9 }] }
+    }
+  },
+
+  knives: {
+    label: "Knives", icon: "fa-solid fa-dagger", band: "knives", blend: "normal",
+    styles: {
+      steel: { label: "Steel", colors: ["#ffffff", "#a8b0bc", "#2a2e36"], p1: 0.85,
+        swarms: [{ tex: "sparkle", count: 4, mode: "orbit", radius: [1.2, 1.3], size: [0.05, 0.08], speed: 0.55, colors: ["#ffffff"], blend: "add", alpha: 0.9, blink: true }] },
+      assassin: { label: "Assassin", colors: ["#ff5a5a", "#2a2a30", "#08080a"], p1: 0 },
+      gilded: { label: "Gilded", colors: ["#fff4c8", "#d8a83a", "#3a2608"], p1: 1,
+        swarms: [{ tex: "sparkle", count: 5, mode: "orbit", radius: [1.2, 1.3], size: [0.05, 0.08], speed: 0.55, colors: ["#fff0b0"], blend: "add", alpha: 0.9, blink: true }] },
+      spectral: { label: "Spectral", blend: "add", colors: ["#e0f8ff", "#5ac8ff", "#0a2a4a"], p1: 0,
+        swarms: [{ tex: "glow", count: 10, mode: "orbit", radius: [1.12, 1.24], size: [0.04, 0.07], speed: 0.55, colors: ["#bff0ff"], blend: "add", alpha: 0.8 }] }
     }
   }
 };

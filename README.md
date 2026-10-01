@@ -1,6 +1,6 @@
 # Dxcufgb's lively tokens
 
-Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils and orbiting stones. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
 
@@ -14,7 +14,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ## Features
 
-- **18 ring designs, each with several styles:**
+- **19 ring designs, each with several styles:**
 
   | Design | Styles |
   | --- | --- |
@@ -36,6 +36,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   | Charm | Rose, Lovesick, Crimson, Fae |
   | Necrotic | Necrotic, Shadow, Blood, Bone |
   | Orbiting Stones | Granite, Sandstone, Obsidian, Jade |
+  | Knives | Steel, Assassin, Gilded, Spectral |
 
 - **Layers: combine effects into one ring.** Stack up to 6 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
 - **Your own image as an effect.** Pick *Your image*, then **Browse** to an image or **Upload** a PNG (it goes into `worlds/<your world>/dxcufgbs-lively-tokens/`). Choose how it moves (centred, turning, circling, drifting, rising, fluttering, puffs, swirling in), its size and how many, and its colour:
@@ -91,4 +92,4 @@ api.presets();                                                // your saved effe
 
 Code: [MIT](LICENSE).
 
-The sprites in `textures/` (smoke, flames, stars, swirls, rune circle) come from the [Particle Pack](https://kenney.nl/assets/particle-pack) by Kenney (www.kenney.nl), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain), see [textures/LICENSE-Kenney.txt](textures/LICENSE-Kenney.txt). The ring bands, leaves, petals, glows, sparkles, bubbles, notes, hearts and stones are drawn by the module's own code; no other image files are included. Everything is free to use, change and share.
+The sprites in `textures/` (smoke, flames, stars, swirls, rune circle) come from the [Particle Pack](https://kenney.nl/assets/particle-pack) by Kenney (www.kenney.nl), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain), see [textures/LICENSE-Kenney.txt](textures/LICENSE-Kenney.txt). The ring bands, leaves, petals, glows, sparkles, bubbles, notes, hearts, stones and knives are drawn by the module's own code; no other image files are included. Everything is free to use, change and share.
