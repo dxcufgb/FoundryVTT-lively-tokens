@@ -115,6 +115,24 @@
       "tint": "Tint",
       "colorize": "Recolour",
       "hue": "Shift hue"
+    },
+    "Transfer": {
+      "Export": "Export to file",
+      "Import": "Import from file",
+      "ExportHint": "Save the ring in the editor as one file, including your own images, to use in another world or Foundry",
+      "ImportHint": "Load a ring file exported from Lively tokens; its images are added to this world and it is saved to your saved effects",
+      "ExportTitle": "Export ring",
+      "ExportText": "The ring in the editor, with all its layers and your own images, is saved as one file.",
+      "DefaultName": "Imported ring",
+      "Exported": "Ring exported as {file}.",
+      "ExportFailed": "The ring could not be exported, see the console (F12) for details.",
+      "NotEmbedded": "These images could not be put in the file, so the file only refers to where they are: {files}",
+      "Imported": "Imported \"{name}\" and added it to your saved effects ({n} image(s) added to this world).",
+      "ImportFailed": "The file could not be imported: {error}",
+      "BadFile": "this is not a Lively tokens ring file.",
+      "TooNew": "the file was made by a newer version of Lively tokens; update the module first.",
+      "ImageFailed": "These images from the file could not be added to this world: {files}",
+      "NoUploadImport": "You may not upload files in this world, so these images from the file were not added: {files}. Ask the GM to import the file."
     }
   }
 }

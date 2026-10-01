@@ -75,3 +75,5 @@
 .dxlt-config .dxlt-image-buttons { display: flex; gap: 0.3rem; }
 .dxlt-config .dxlt-sliders select { width: 100%; }
 .dxlt-config .dxlt-color select { flex: 1; }
+.dxlt-config .dxlt-transfer { display: flex; gap: 0.3rem; width: 100%; }
+.dxlt-config .dxlt-transfer button { flex: 1; min-width: 0; white-space: nowrap; }
