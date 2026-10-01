@@ -334,6 +334,152 @@ vec4 ring(vec2 p, float r, float a, float t) {
   col = mix(col, uA, clamp(smoothstep(0.55, 1.0, I) + horizon, 0.0, 1.0));
   float al = clamp(band * 0.9 + horizon, 0.0, 1.0) * smoothstep(0.97, 1.005, r);
   return vec4(col, al);
+}`,
+
+  // Crackling bolts of lightning that jump around the token.
+  storm: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  vec2 cs = vec2(cos(a), sin(a));
+  vec3 col = vec3(0.0);
+  float I = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float fk = float(k);
+    float seed = hash(vec2(floor(t * 7.0 + fk * 0.37), fk));
+    vec2 q = cs * (2.5 + fk) + vec2(seed * 13.0, fk * 7.1);
+    float line = 1.13 + (fbm(q * 1.6) - 0.5) * 0.22 + (noise(q * 7.0) - 0.5) * 0.05;
+    float d = abs(r - line);
+    float span = smoothstep(0.42, 0.6, noise(cs * 1.4 + vec2(seed * 31.0, fk * 3.0)));
+    float core = smoothstep(0.012, 0.003, d);
+    float b = (core + exp(-d * 28.0) * 0.55) * span * step(0.25, seed);
+    I += b;
+    col += mix(uB, uA, core) * b;
+  }
+  float rim = exp(-pow((r - 1.04) / 0.04, 2.0)) * (0.25 + 0.15 * sin(t * 13.0 + a * 4.0));
+  I += rim;
+  col += uB * rim;
+  col /= max(I, 0.001);
+  return vec4(col, clamp(I, 0.0, 1.0) * smoothstep(0.96, 1.0, r));
+}`,
+
+  // Shards of ice growing out of the token's edge, glinting, with a cold mist.
+  frost: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  float N = 22.0;
+  float aa = a + t * 0.03;
+  vec3 col = vec3(0.0);
+  float al = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float cell = floor((aa / TAU + 0.5) * N) + float(k) - 1.0;
+    float h = hash(vec2(cell, 1.7));
+    float ca = (cell + 0.5 + (h - 0.5) * 0.5) / N * TAU - PI;
+    float dx = aa - ca;
+    dx -= TAU * floor((dx + PI) / TAU);
+    float x = dx * r;
+    float y = (r - 0.99) / (0.12 + 0.22 * h);
+    float hw = 0.045 * (0.7 + 0.6 * hash(vec2(cell, 4.2))) * (1.0 - y);
+    float inside = step(0.0, y) * step(y, 1.0);
+    float cov = smoothstep(0.004, -0.004, abs(x) - hw) * inside;
+    float sparkle = pow(max(0.0, sin(t * 2.0 + h * 20.0 + y * 6.0)), 12.0);
+    vec3 c = mix(uB, uA, y * 0.6 + 0.2) * (x > 0.0 ? 1.0 : 0.65) + uA * sparkle * 0.8;
+    c = mix(c, uA, smoothstep(0.006, 0.0, abs(abs(x) - hw)) * inside * 0.7);
+    col = mix(col, c, cov);
+    al = max(al, cov * 0.9);
+  }
+  float mist = fbm(vec2(cos(a), sin(a)) * 3.0 + vec2(t * 0.15, r * 2.0));
+  float m = exp(-pow((r - 1.06) / 0.08, 2.0)) * mist * 0.6 * smoothstep(0.96, 1.0, r);
+  col = mix(uA, col, clamp(al * 4.0, 0.0, 1.0));
+  return vec4(col, max(al, m));
+}`,
+
+  // A ring of water with a rolling surface, caustics, foam and ripples spreading out.
+  tide: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  vec2 cs = vec2(cos(a), sin(a));
+  float surf = 1.10 + 0.025 * sin(a * 7.0 - t * 1.6) + 0.018 * sin(a * 11.0 + t * 2.1) + 0.03 * (fbm(cs * 2.0 + t * 0.2) - 0.5);
+  float body = smoothstep(surf + 0.006, surf - 0.006, r) * smoothstep(0.985, 1.01, r);
+  vec3 col = mix(uB, uC, clamp((surf - r) / 0.11, 0.0, 1.0));
+  float caustic = pow(noise(p * 9.0 + vec2(t * 0.6, -t * 0.4)) * noise(p * 13.0 - vec2(t * 0.5, t * 0.3)) * 2.2, 2.0);
+  col += uA * caustic * 0.5 * body;
+  float foam = smoothstep(0.014, 0.0, abs(r - surf)) * (0.6 + 0.4 * noise(cs * 14.0 + t));
+  col = mix(col, uA, foam);
+  float rip = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float ph = fract(t * 0.25 + float(k) / 3.0);
+    rip += smoothstep(0.012, 0.0, abs(r - (surf + 0.04 + ph * 0.4))) * (1.0 - ph) * 0.5;
+  }
+  float al = max(body * 0.85, foam);
+  col = mix(uA, col, clamp(al * 3.0, 0.0, 1.0));
+  return vec4(col, max(al, rip));
+}`,
+
+  // A shell of hexagonal force-field cells, flickering, with a light sweeping round.
+  ward: `
+float hexd(vec2 p) { p = abs(p); return max(dot(p, vec2(0.5, 0.8660254)), p.x); }
+vec4 ring(vec2 p, float r, float a, float t) {
+  float N = 36.0, Rm = 1.14;
+  float aa = a + t * 0.05;
+  vec2 q = vec2((aa / TAU + 0.5) * N, (r - Rm) / (TAU * Rm / N));
+  vec2 s = vec2(1.0, 1.7320508);
+  vec2 ga = mod(q, s) - s * 0.5;
+  vec2 gb = mod(q - s * 0.5, s) - s * 0.5;
+  vec2 gv = dot(ga, ga) < dot(gb, gb) ? ga : gb;
+  vec2 id = q - gv;
+  id.x = mod(id.x, N);
+  float edge = smoothstep(0.07, 0.0, 0.5 - hexd(gv));
+  float h = hash(id + floor(t * 1.5) * 0.37);
+  float flash = smoothstep(0.82, 1.0, h) * (0.5 + 0.5 * sin(t * 6.0 + h * 30.0));
+  float sweep = pow(0.5 + 0.5 * sin(aa * 2.0 - t * 1.5), 8.0);
+  float band = smoothstep(0.12, 0.09, abs(r - Rm));
+  float rims = smoothstep(0.008, 0.0, abs(r - (Rm - 0.105))) + smoothstep(0.008, 0.0, abs(r - (Rm + 0.105)));
+  float I = (edge * (0.7 + sweep) + 0.10 + flash * 0.5 + sweep * 0.25) * band + rims * 0.8;
+  vec3 col = mix(uB, uA, clamp(edge * 0.6 + flash + rims, 0.0, 1.0));
+  return vec4(col, I);
+}`,
+
+  // Five wavering staff lines; the notes themselves are sprites.
+  staff: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  float I = 0.0;
+  for (int k = 0; k < 5; k++) {
+    float fk = float(k);
+    float rr = 1.06 + fk * 0.035 + 0.02 * sin(a * 3.0 + t * 1.2 + fk * 0.4);
+    I += smoothstep(0.006, 0.0015, abs(r - rr));
+  }
+  float fade = 0.35 + 0.65 * pow(0.5 + 0.5 * sin(a * 2.0 - t * 0.8), 2.0);
+  float glow = exp(-pow((r - 1.13) / 0.1, 2.0)) * 0.15;
+  return vec4(mix(uB, uA, fade), I * fade * 0.8 + glow);
+}`,
+
+  // A warm halo that beats like a heart; the hearts are sprites.
+  heartbeat: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  float beat = pow(abs(sin(t * 2.4)), 12.0) + 0.6 * pow(abs(sin(t * 2.4 + 0.5)), 12.0);
+  float h = exp(-pow((r - 1.08 - beat * 0.03) / (0.07 + 0.03 * beat), 2.0)) * (0.25 + 0.45 * beat);
+  float n = noise(vec2(cos(a), sin(a)) * 4.0 + t * 0.5);
+  return vec4(mix(uB, uA, clamp(beat, 0.0, 1.0)), h * (0.8 + 0.4 * n) * smoothstep(0.95, 1.01, r));
+}`,
+
+  // Dark tendrils writhing out of the token's edge.
+  tendrils: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  vec2 cs = vec2(cos(a), sin(a));
+  float w = a * 13.0 + 1.4 * sin(r * 8.0 - t * 1.3 + a * 2.0) + 2.0 * fbm(cs * 2.0 + t * 0.15);
+  float strand = pow(0.5 + 0.5 * cos(w), 5.0);
+  float y = (r - 0.99) / (0.16 + 0.32 * fbm(cs * 1.7 + vec2(t * 0.1, 3.0)));
+  float m = strand * smoothstep(1.0, 0.2, y) * smoothstep(-0.02, 0.06, y);
+  float base = exp(-pow((r - 1.02) / 0.05, 2.0)) * 0.8 * smoothstep(0.96, 1.0, r);
+  vec3 col = mix(uC, uB, clamp(y, 0.0, 1.0));
+  col += uA * pow(strand, 4.0) * smoothstep(0.4, 1.0, y) * 0.7;
+  return vec4(col, max(m, base));
+}`,
+
+  // A thin band of dust; the stones are sprites.
+  dust: `
+vec4 ring(vec2 p, float r, float a, float t) {
+  vec2 q = rot(t * 0.12) * p;
+  float n = fbm(q * 4.0);
+  float d = exp(-pow((r - 1.22) / 0.10, 2.0)) * smoothstep(0.35, 0.8, n) * 0.55;
+  return vec4(mix(uC, uB, n), d);
 }`
 };
 
@@ -490,23 +636,215 @@ export const DESIGNS = {
       solar: { label: "Solar Rift", colors: ["#fff4c0", "#ff8a1a", "#1a0602"],
         swarms: [{ tex: "twirls", frames: 3, count: 7, mode: "inward", radius: [1.02, 1.45], size: [0.32, 0.46], speed: 1.2, colors: ["#ffb84a", "#ff5a1a"], blend: "add", alpha: 0.8 }] }
     }
+  },
+
+  storm: {
+    label: "Storm", icon: "fa-solid fa-bolt", band: "storm", blend: "add",
+    styles: {
+      storm: { label: "Thunder", colors: ["#ffffff", "#6ab8ff", "#0a1a4a"],
+        swarms: [{ tex: "sparkle", count: 10, mode: "wander", radius: [1.05, 1.3], size: [0.06, 0.1], speed: 0.6, colors: ["#e0f4ff", "#9ad0ff"], blend: "add", alpha: 1, blink: true }] },
+      arcane: { label: "Arcane", colors: ["#fff0ff", "#c05aff", "#2a0a4a"],
+        swarms: [{ tex: "sparkle", count: 10, mode: "wander", radius: [1.05, 1.3], size: [0.06, 0.1], speed: 0.6, colors: ["#f0d0ff", "#c08aff"], blend: "add", alpha: 1, blink: true }] },
+      golden: { label: "Golden", colors: ["#ffffff", "#ffd84a", "#4a3000"],
+        swarms: [{ tex: "sparkle", count: 10, mode: "wander", radius: [1.05, 1.3], size: [0.06, 0.1], speed: 0.6, colors: ["#fff4c0", "#ffd86a"], blend: "add", alpha: 1, blink: true }] },
+      crimson: { label: "Crimson", colors: ["#fff0f0", "#ff3a4a", "#3a0008"],
+        swarms: [{ tex: "sparkle", count: 10, mode: "wander", radius: [1.05, 1.3], size: [0.06, 0.1], speed: 0.6, colors: ["#ffd0d0", "#ff6a6a"], blend: "add", alpha: 1, blink: true }] }
+    }
+  },
+
+  frost: {
+    label: "Frost", icon: "fa-solid fa-snowflake", band: "frost", blend: "normal",
+    styles: {
+      frost: { label: "Frost", colors: ["#ffffff", "#9ad8ff", "#1a4a7a"],
+        swarms: [{ tex: "sparkle", count: 14, mode: "flutter", radius: [1.05, 1.45], size: [0.06, 0.1], speed: 0.25, colors: ["#ffffff", "#d8f0ff"], blend: "add", alpha: 0.9 }] },
+      glacier: { label: "Glacier", colors: ["#e0ffff", "#3a9ad8", "#0a1a4a"],
+        swarms: [{ tex: "sparkle", count: 12, mode: "flutter", radius: [1.05, 1.45], size: [0.06, 0.1], speed: 0.25, colors: ["#c8f8ff"], blend: "add", alpha: 0.9 }] },
+      rime: { label: "Rime", colors: ["#ffffff", "#c8d4dc", "#4a5a68"],
+        swarms: [{ tex: "stars", count: 16, mode: "flutter", radius: [1.05, 1.5], size: [0.1, 0.15], speed: 0.25, colors: ["#ffffff"], blend: "add", alpha: 0.9 }] },
+      amethyst: { label: "Amethyst", colors: ["#fff0ff", "#b878ff", "#2a0a5a"],
+        swarms: [{ tex: "sparkle", count: 12, mode: "flutter", radius: [1.05, 1.45], size: [0.06, 0.1], speed: 0.25, colors: ["#f0d8ff", "#d0a8ff"], blend: "add", alpha: 0.9 }] }
+    }
+  },
+
+  tide: {
+    label: "Tide", icon: "fa-solid fa-water", band: "tide", blend: "normal",
+    styles: {
+      ocean: { label: "Ocean", colors: ["#e0ffff", "#1a8ad8", "#06204a"],
+        swarms: [{ tex: "bubble", count: 12, mode: "rise", radius: [1.0, 1.15], size: [0.04, 0.08], speed: 0.4, colors: ["#d8f8ff"], blend: "normal", alpha: 0.9 }] },
+      tropical: { label: "Tropical", colors: ["#f0fff8", "#1ad8c0", "#04404a"],
+        swarms: [{ tex: "bubble", count: 12, mode: "rise", radius: [1.0, 1.15], size: [0.04, 0.08], speed: 0.4, colors: ["#e0fff8"], blend: "normal", alpha: 0.9 }] },
+      swamp: { label: "Swamp", colors: ["#d8f0a0", "#5a7a2a", "#1a2408"],
+        swarms: [{ tex: "bubble", count: 14, mode: "rise", radius: [1.0, 1.15], size: [0.05, 0.1], speed: 0.3, colors: ["#b8d880", "#8aa85a"], blend: "normal", alpha: 0.9 }] },
+      blood: { label: "Blood", colors: ["#ffb0a8", "#a80a14", "#2a0002"],
+        swarms: [{ tex: "bubble", count: 10, mode: "rise", radius: [1.0, 1.15], size: [0.04, 0.08], speed: 0.3, colors: ["#ff8a80"], blend: "normal", alpha: 0.9 }] }
+    }
+  },
+
+  ward: {
+    label: "Arcane Ward", icon: "fa-solid fa-shield-halved", band: "ward", blend: "add",
+    styles: {
+      arcane: { label: "Arcane", colors: ["#e8f8ff", "#3a9aff", "#0a1a4a"] },
+      holy: { label: "Holy", colors: ["#fffbe0", "#ffc83a", "#4a3000"] },
+      nature: { label: "Nature", colors: ["#f0ffe0", "#4adf6a", "#0a3a12"] },
+      infernal: { label: "Infernal", colors: ["#ffe8d0", "#ff4a1a", "#3a0400"] }
+    }
+  },
+
+  melody: {
+    label: "Bard's Song", icon: "fa-solid fa-music", band: "staff", blend: "add",
+    styles: {
+      golden: { label: "Golden", colors: ["#fff8d0", "#ffc84a", "#4a3000"],
+        swarms: [{ tex: "note", count: 9, mode: "flutter", radius: [1.1, 1.5], size: [0.1, 0.15], speed: 0.4, colors: ["#ffe08a", "#fff0c0"], blend: "add", alpha: 1 }] },
+      silver: { label: "Silver", colors: ["#ffffff", "#c8d8e8", "#3a4a5a"],
+        swarms: [{ tex: "note", count: 9, mode: "flutter", radius: [1.1, 1.5], size: [0.1, 0.15], speed: 0.4, colors: ["#ffffff", "#d8e8f8"], blend: "add", alpha: 1 }] },
+      rose: { label: "Rose", colors: ["#fff0f6", "#ff7ab8", "#4a0a2a"],
+        swarms: [{ tex: "note", count: 9, mode: "flutter", radius: [1.1, 1.5], size: [0.1, 0.15], speed: 0.4, colors: ["#ffb0d8", "#ffd8ea"], blend: "add", alpha: 1 }] },
+      azure: { label: "Azure", colors: ["#f0fbff", "#4ab8ff", "#0a2a4a"],
+        swarms: [{ tex: "note", count: 9, mode: "flutter", radius: [1.1, 1.5], size: [0.1, 0.15], speed: 0.4, colors: ["#a8e0ff", "#e0f4ff"], blend: "add", alpha: 1 }] }
+    }
+  },
+
+  hearts: {
+    label: "Charm", icon: "fa-solid fa-heart", band: "heartbeat", blend: "add",
+    styles: {
+      rose: { label: "Rose", colors: ["#ffe0ec", "#ff4a8a", "#4a0020"],
+        swarms: [{ tex: "heart", count: 10, mode: "rise", radius: [1.0, 1.2], size: [0.07, 0.11], speed: 0.4, colors: ["#ff6aa0", "#ff3a7a", "#ffa0c8"], blend: "normal", alpha: 1 }] },
+      lovesick: { label: "Lovesick", colors: ["#f8e0ff", "#b04aff", "#2a0040"],
+        swarms: [{ tex: "heart", count: 10, mode: "rise", radius: [1.0, 1.2], size: [0.07, 0.11], speed: 0.4, colors: ["#c87aff", "#e0a8ff"], blend: "normal", alpha: 1 }] },
+      crimson: { label: "Crimson", colors: ["#ffd0d0", "#e0101a", "#3a0002"],
+        swarms: [{ tex: "heart", count: 10, mode: "rise", radius: [1.0, 1.2], size: [0.07, 0.11], speed: 0.4, colors: ["#e81a2a", "#ff4a4a"], blend: "normal", alpha: 1 }] },
+      fae: { label: "Fae", colors: ["#f0fff0", "#ff8ad8", "#0a3a2a"],
+        swarms: [{ tex: "heart", count: 8, mode: "flutter", radius: [1.05, 1.45], size: [0.07, 0.1], speed: 0.35, colors: ["#ffa8e0", "#a8ffd0"], blend: "normal", alpha: 1 },
+                 { tex: "glow", count: 8, mode: "wander", radius: [1.05, 1.35], size: [0.04, 0.07], speed: 0.25, colors: ["#d8ffe8", "#ffd8f4"], blend: "add", alpha: 0.9 }] }
+    }
+  },
+
+  necrotic: {
+    label: "Necrotic", icon: "fa-solid fa-skull", band: "tendrils", blend: "normal",
+    styles: {
+      necrotic: { label: "Necrotic", colors: ["#c8ff8a", "#2a5a1a", "#060a04"],
+        swarms: [{ tex: "glow", count: 12, mode: "rise", radius: [1.0, 1.2], size: [0.04, 0.07], speed: 0.4, colors: ["#9aff5a", "#5adf3a"], blend: "add", alpha: 1 }] },
+      shadow: { label: "Shadow", colors: ["#c8a8ff", "#2a1a3a", "#050308"],
+        swarms: [{ tex: "smoke", count: 8, mode: "puff", radius: [1.05, 1.3], size: [0.3, 0.5], speed: 0.3, colors: ["#120c18", "#1a1222"], blend: "normal", alpha: 0.6, spin: 0.4 }] },
+      blood: { label: "Blood", colors: ["#ff8a7a", "#6a0a0a", "#0a0202"],
+        swarms: [{ tex: "glow", count: 10, mode: "rise", radius: [1.0, 1.2], size: [0.04, 0.07], speed: 0.35, colors: ["#ff3a2a"], blend: "add", alpha: 1 }] },
+      bone: { label: "Bone", colors: ["#ffffff", "#c8bca0", "#2a241a"],
+        swarms: [{ tex: "glow", count: 10, mode: "rise", radius: [1.0, 1.2], size: [0.04, 0.07], speed: 0.35, colors: ["#e8e0c8"], blend: "add", alpha: 0.9 }] }
+    }
+  },
+
+  stones: {
+    label: "Orbiting Stones", icon: "fa-solid fa-mountain", band: "dust", blend: "normal",
+    styles: {
+      granite: { label: "Granite", colors: ["#d8d8d0", "#8a8a84", "#2a2a28"],
+        swarms: [{ tex: "rock", count: 6, mode: "orbit", radius: [1.2, 1.3], size: [0.12, 0.18], speed: 0.35, colors: ["#b8b8b0", "#9a9a94"], blend: "normal", alpha: 1, spin: 0.6 },
+                 { tex: "rock", count: 8, mode: "orbit", radius: [1.14, 1.34], size: [0.05, 0.07], speed: 0.5, colors: ["#a8a8a0"], blend: "normal", alpha: 1, spin: 1.2 }] },
+      sandstone: { label: "Sandstone", colors: ["#fff0c8", "#d8a868", "#4a3010"],
+        swarms: [{ tex: "rock", count: 6, mode: "orbit", radius: [1.2, 1.3], size: [0.12, 0.18], speed: 0.35, colors: ["#e8b878", "#d89a5a"], blend: "normal", alpha: 1, spin: 0.6 },
+                 { tex: "rock", count: 8, mode: "orbit", radius: [1.14, 1.34], size: [0.05, 0.07], speed: 0.5, colors: ["#e0b080"], blend: "normal", alpha: 1, spin: 1.2 }] },
+      obsidian: { label: "Obsidian", colors: ["#c8a8ff", "#3a3048", "#08060c"],
+        swarms: [{ tex: "rock", count: 6, mode: "orbit", radius: [1.2, 1.3], size: [0.12, 0.18], speed: 0.35, colors: ["#4a4058", "#3a3044"], blend: "normal", alpha: 1, spin: 0.6 },
+                 { tex: "glow", count: 8, mode: "orbit", radius: [1.14, 1.34], size: [0.03, 0.05], speed: 0.5, colors: ["#b88aff"], blend: "add", alpha: 0.9 }] },
+      jade: { label: "Jade", colors: ["#e0fff0", "#3ab87a", "#06301a"],
+        swarms: [{ tex: "rock", count: 6, mode: "orbit", radius: [1.2, 1.3], size: [0.12, 0.18], speed: 0.35, colors: ["#5ad89a", "#3ab87a"], blend: "normal", alpha: 1, spin: 0.6 },
+                 { tex: "glow", count: 8, mode: "orbit", radius: [1.14, 1.34], size: [0.03, 0.05], speed: 0.5, colors: ["#a8ffd0"], blend: "add", alpha: 0.9 }] }
+    }
   }
 };
 
-export const DEFAULTS = { design: "glyphs", style: "arcane", scale: 1, speed: 1, alpha: 1, density: 1, color: null };
+/** The design id of a layer that shows the user's own image. */
+export const CUSTOM = "custom";
+export const MAX_LAYERS = 6;
 
-/** Fill in missing fields and fall back to valid design/style names. */
-export function normalizeConfig(cfg = {}) {
-  const c = { ...DEFAULTS, ...(cfg ?? {}) };
-  if (!DESIGNS[c.design]) c.design = DEFAULTS.design;
+/**
+ * How a custom image moves. mode/radius/speed/spin feed the Swarm, size and count are the defaults
+ * the window switches to when the motion is chosen; `single` motions show one copy of the image.
+ */
+export const MOTIONS = {
+  center:  { label: "DXLT.Motion.Center",  mode: "spinner", radius: [0, 0], speed: 0, size: 1.3, count: 1, single: true },
+  spin:    { label: "DXLT.Motion.Spin",    mode: "spinner", radius: [0, 0], speed: 0.6, size: 1.3, count: 1, single: true },
+  orbit:   { label: "DXLT.Motion.Orbit",   mode: "orbit",   radius: [1.15, 1.25], speed: 0.6, size: 0.22, count: 6 },
+  wander:  { label: "DXLT.Motion.Wander",  mode: "wander",  radius: [1.05, 1.45], speed: 0.3, size: 0.16, count: 8 },
+  rise:    { label: "DXLT.Motion.Rise",    mode: "rise",    radius: [1.0, 1.15],  speed: 0.4, size: 0.12, count: 10 },
+  flutter: { label: "DXLT.Motion.Flutter", mode: "flutter", radius: [1.05, 1.5],  speed: 0.4, size: 0.16, count: 10 },
+  puff:    { label: "DXLT.Motion.Puff",    mode: "puff",    radius: [1.05, 1.3],  speed: 0.3, size: 0.4, count: 8, spin: 0.3 },
+  inward:  { label: "DXLT.Motion.Inward",  mode: "inward",  radius: [1.02, 1.5],  speed: 1.2, size: 0.3, count: 6 }
+};
+export const COLOR_MODES = ["original", "tint", "colorize", "hue"];
+
+/** Fields every layer has (fine-tuning and effects). */
+export const LAYER_DEFAULTS = {
+  design: "glyphs", style: "arcane", scale: 1, speed: 1, alpha: 1, density: 1, color: null,
+  glow: 0, pulse: 0, rainbow: 0, spin: 0
+};
+/** Extra fields of a custom image layer. */
+export const CUSTOM_DEFAULTS = { src: "", motion: "center", count: 1, size: 1.3, blend: "normal", colorMode: "original", hue: 0 };
+export const DEFAULTS = LAYER_DEFAULTS;
+
+const RANGES = [
+  ["scale", 0.5, 2.5], ["speed", 0, 4], ["alpha", 0, 1], ["density", 0, 3],
+  ["glow", 0, 1], ["pulse", 0, 1], ["rainbow", 0, 1], ["spin", -2, 2]
+];
+const CUSTOM_RANGES = [["count", 1, 40], ["size", 0.05, 3], ["hue", 0, 360]];
+
+function clampFields(c, ranges, defaults) {
+  for (const [k, lo, hi] of ranges) {
+    const v = Number(c[k]);
+    c[k] = Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : defaults[k];
+  }
+}
+
+/** Fill in one layer's missing fields and fall back to valid values. */
+export function normalizeLayer(layer = {}) {
+  const src = layer ?? {};
+  const c = {};
+  for (const k of Object.keys(LAYER_DEFAULTS)) c[k] = src[k] ?? LAYER_DEFAULTS[k];
+  clampFields(c, RANGES, LAYER_DEFAULTS);
+  if (c.color && !/^#[0-9a-f]{6}$/i.test(c.color)) c.color = null;
+  if (c.design === CUSTOM) {
+    c.style = CUSTOM;
+    for (const k of Object.keys(CUSTOM_DEFAULTS)) c[k] = src[k] ?? CUSTOM_DEFAULTS[k];
+    clampFields(c, CUSTOM_RANGES, CUSTOM_DEFAULTS);
+    c.count = Math.round(c.count);
+    c.src = typeof c.src === "string" ? c.src.trim() : "";
+    if (/^\s*(javascript|data:text)/i.test(c.src)) c.src = "";
+    if (!MOTIONS[c.motion]) c.motion = CUSTOM_DEFAULTS.motion;
+    if (!COLOR_MODES.includes(c.colorMode)) c.colorMode = "original";
+    if (c.blend !== "add") c.blend = "normal";
+    return c;
+  }
+  if (!DESIGNS[c.design]) c.design = LAYER_DEFAULTS.design;
   const styles = DESIGNS[c.design].styles;
   if (!styles[c.style]) c.style = Object.keys(styles)[0];
-  for (const [k, lo, hi] of [["scale", 0.5, 2.5], ["speed", 0, 4], ["alpha", 0, 1], ["density", 0, 3]]) {
-    const v = Number(c[k]);
-    c[k] = Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : DEFAULTS[k];
-  }
-  if (c.color && !/^#[0-9a-f]{6}$/i.test(c.color)) c.color = null;
   return c;
+}
+
+/**
+ * A ring is a stack of layers, drawn bottom (first) to top: {layers: [layer, ...]}.
+ * A single layer (the format of version 1.0) is accepted and wrapped.
+ */
+export function normalizeConfig(cfg = {}) {
+  let layers = cfg?.layers;
+  if (layers && !Array.isArray(layers) && typeof layers === "object") layers = Object.values(layers);
+  if (!Array.isArray(layers)) layers = cfg && (cfg.design || cfg.style) ? [cfg] : [];
+  layers = layers.slice(0, MAX_LAYERS).map(normalizeLayer);
+  if (!layers.length) layers = [normalizeLayer({})];
+  return { layers };
+}
+
+/** Image paths used by a ring's custom layers. */
+export function customSources(cfg) {
+  return [...new Set(normalizeConfig(cfg).layers.filter(l => l.design === CUSTOM && l.src).map(l => l.src))];
+}
+
+/** A short name for a layer, for lists. */
+export function layerLabel(layer) {
+  if (layer.design === CUSTOM) {
+    const file = decodeURIComponent((layer.src || "").split(/[\\/]/).pop() || "").replace(/\.[a-z0-9]+$/i, "");
+    return file || null;
+  }
+  const d = DESIGNS[layer.design];
+  return `${d.label}: ${d.styles[layer.style]?.label ?? ""}`;
 }
 
 /* ======================================================================== */
@@ -606,6 +944,80 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
       g.beginPath(); g.moveTo(0, i * s * 0.12); g.lineTo(-s * 0.16, i * s * 0.12 - s * 0.1); g.stroke();
     }
   })];
+  // A four-pointed glint with a soft core.
+  out.sparkle = [canvasTexture(64, (g, s) => {
+    g.translate(s / 2, s / 2);
+    const r = g.createRadialGradient(0, 0, 0, 0, 0, s * 0.22);
+    r.addColorStop(0, "rgba(255,255,255,0.9)"); r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r; g.fillRect(-s / 2, -s / 2, s, s);
+    g.fillStyle = "#ffffff";
+    g.beginPath();
+    const L = s * 0.48, W = s * 0.07;
+    g.moveTo(0, -L);
+    g.quadraticCurveTo(W, -W, L, 0); g.quadraticCurveTo(W, W, 0, L);
+    g.quadraticCurveTo(-W, W, -L, 0); g.quadraticCurveTo(-W, -W, 0, -L);
+    g.fill();
+  })];
+  // A bubble: thin rim, faint body, a highlight.
+  out.bubble = [canvasTexture(64, (g, s) => {
+    g.translate(s / 2, s / 2);
+    g.fillStyle = "rgba(255,255,255,0.15)";
+    g.beginPath(); g.arc(0, 0, s * 0.42, 0, TAU); g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.9)"; g.lineWidth = s * 0.05;
+    g.beginPath(); g.arc(0, 0, s * 0.42, 0, TAU); g.stroke();
+    g.fillStyle = "#ffffff";
+    g.beginPath(); g.ellipse(-s * 0.15, -s * 0.17, s * 0.09, s * 0.06, -0.7, 0, TAU); g.fill();
+  })];
+  // Music notes: a quaver and two beamed quavers.
+  const head = (g, x, y, s) => { g.beginPath(); g.ellipse(x, y, s * 0.13, s * 0.095, -0.45, 0, TAU); g.fill(); };
+  out.note = [
+    canvasTexture(64, (g, s) => {
+      g.fillStyle = "#ffffff";
+      head(g, s * 0.36, s * 0.76, s);
+      g.fillRect(s * 0.45, s * 0.12, s * 0.06, s * 0.64);
+      g.beginPath();
+      g.moveTo(s * 0.51, s * 0.12);
+      g.bezierCurveTo(s * 0.58, s * 0.3, s * 0.82, s * 0.32, s * 0.72, s * 0.58);
+      g.bezierCurveTo(s * 0.74, s * 0.38, s * 0.6, s * 0.34, s * 0.51, s * 0.3);
+      g.fill();
+    }),
+    canvasTexture(64, (g, s) => {
+      g.fillStyle = "#ffffff";
+      head(g, s * 0.24, s * 0.78, s);
+      head(g, s * 0.7, s * 0.68, s);
+      g.fillRect(s * 0.33, s * 0.2, s * 0.055, s * 0.58);
+      g.fillRect(s * 0.79, s * 0.1, s * 0.055, s * 0.58);
+      g.beginPath();
+      g.moveTo(s * 0.33, s * 0.2); g.lineTo(s * 0.845, s * 0.1); g.lineTo(s * 0.845, s * 0.22); g.lineTo(s * 0.33, s * 0.32);
+      g.fill();
+    })
+  ];
+  out.heart = [canvasTexture(64, (g, s) => {
+    g.translate(s / 2, s / 2 + s * 0.04);
+    g.fillStyle = "#ffffff";
+    g.beginPath();
+    g.moveTo(0, s * 0.36);
+    g.bezierCurveTo(-s * 0.56, -s * 0.02, -s * 0.26, -s * 0.5, 0, -s * 0.18);
+    g.bezierCurveTo(s * 0.26, -s * 0.5, s * 0.56, -s * 0.02, 0, s * 0.36);
+    g.fill();
+  })];
+  // Stones: irregular, lit from the top left (light grey, so they take a tint).
+  out.rock = [0, 1, 2].map(v => canvasTexture(64, (g, s) => {
+    let seed = 17 + v * 31;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    g.translate(s / 2, s / 2);
+    const n = 8 + v;
+    g.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU, rr = s * (0.3 + 0.14 * rnd());
+      i ? g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : g.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    g.closePath();
+    const r = g.createRadialGradient(-s * 0.14, -s * 0.16, s * 0.02, 0, 0, s * 0.46);
+    r.addColorStop(0, "#ffffff"); r.addColorStop(0.55, "#b4b4b4"); r.addColorStop(1, "#5a5a5a");
+    g.fillStyle = r; g.fill();
+    g.strokeStyle = "rgba(40,40,40,0.6)"; g.lineWidth = s * 0.025; g.stroke();
+  }));
   return out;
 }
 
@@ -619,7 +1031,7 @@ class Swarm extends PIXI.Container {
   constructor(def, textures, colors, count) {
     super();
     this.def = def;
-    let variants = textures[def.tex] ?? textures.glow ?? [PIXI.Texture.WHITE];
+    let variants = def.textures ?? textures[def.tex] ?? textures.glow ?? [PIXI.Texture.WHITE];
     if (def.frames) variants = variants.slice(0, def.frames);
     this.items = [];
     for (let i = 0; i < count; i++) {
@@ -641,7 +1053,7 @@ class Swarm extends PIXI.Container {
     p.life = initial ? Math.random() : 0;
     p.lifespan = rand(1.6, 3.2);
     p.spin = (d.spin ?? 0) * (Math.random() < 0.5 ? -1 : 1) + (d.mode === "flutter" ? rand(-1.5, 1.5) : 0);
-    p.sprite.rotation = Math.random() * TAU;
+    p.sprite.rotation = d.custom ? 0 : Math.random() * TAU;   // own images start upright
     p.dir = Math.random() < 0.5 ? -1 : 1;
   }
 
@@ -662,7 +1074,7 @@ class Swarm extends PIXI.Container {
           p.angle += d.speed * dt;
           const rr = p.r + 0.02 * Math.sin(t * 1.7 + p.phase);
           x = Math.cos(p.angle) * rr; y = Math.sin(p.angle) * rr;
-          s.rotation += (p.spin || 0.5) * dt;
+          s.rotation += (d.custom ? p.spin : p.spin || 0.5) * dt;
           if (d.blink) alpha = A * (0.3 + 0.7 * Math.pow(0.5 + 0.5 * Math.sin(t * 3 + p.phase * 5), 2));
           else alpha = A * (0.75 + 0.25 * Math.sin(t * 2 + p.phase));
           break;
@@ -674,7 +1086,7 @@ class Swarm extends PIXI.Container {
           y = Math.sin(p.angle + 0.2 * Math.sin(t * 1.1 + p.phase)) * rr;
           const blink = d.blink ? Math.pow(Math.max(0, Math.sin(t * 1.4 + p.phase * 7)), 3) : 0.6 + 0.4 * Math.sin(t * 2 + p.phase);
           alpha = A * blink;
-          s.rotation += 0.3 * dt;
+          if (!d.custom) s.rotation += 0.3 * dt;
           break;
         }
         case "rise": {
@@ -730,6 +1142,57 @@ class Swarm extends PIXI.Container {
 }
 
 /* ======================================================================== */
+/*  Effects                                                                 */
+/* ======================================================================== */
+
+/** Outer glow: a soft, coloured halo taken from the layer's own pixels. */
+const GLOW_FRAG = `
+precision highp float;
+varying vec2 vTextureCoord;
+uniform sampler2D uSampler;
+uniform vec4 inputSize;
+uniform vec4 inputClamp;
+uniform float uDist;
+uniform float uStrength;
+void main() {
+  vec4 c = texture2D(uSampler, vTextureCoord);
+  vec4 acc = vec4(0.0);
+  float tot = 0.0;
+  for (int i = 0; i < 12; i++) {
+    float an = float(i) * 0.5235988;
+    vec2 dir = vec2(cos(an), sin(an)) * inputSize.zw * uDist;
+    for (int j = 1; j <= 3; j++) {
+      float f = float(j) / 3.0;
+      float w = 1.0 - f * 0.6;
+      acc += texture2D(uSampler, clamp(vTextureCoord + dir * f, inputClamp.xy, inputClamp.zw)) * w;
+      tot += w;
+    }
+  }
+  vec4 g = acc / tot * uStrength;
+  if (g.a > 1.0) g /= g.a;
+  gl_FragColor = c + g * (1.0 - c.a);
+}`;
+
+function glowFilter(amount) {
+  const dist = 3 + 14 * amount;
+  const f = new PIXI.Filter(undefined, GLOW_FRAG, { uDist: dist, uStrength: 0.8 + 1.8 * amount });
+  f.padding = Math.ceil(dist) + 2;
+  return f;
+}
+
+const ColorMatrix = () => PIXI.ColorMatrixFilter ?? PIXI.filters?.ColorMatrixFilter;
+
+/** Greyscale the image, then paint it in one colour (keeps light and shade). */
+function colorizeFilter(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  const f = new (ColorMatrix())();
+  const k = 1.25;
+  const row = c => [0.299 * c * k, 0.587 * c * k, 0.114 * c * k, 0, 0];
+  f.matrix = [...row(r), ...row(g), ...row(b), 0, 0, 0, 1, 0];
+  return f;
+}
+
+/* ======================================================================== */
 /*  The ring                                                                */
 /* ======================================================================== */
 
@@ -752,76 +1215,149 @@ function quadGeometry() {
   );
 }
 
-export class LivelyRing extends PIXI.Container {
-  /**
-   * @param {object} cfg        {design, style, scale, speed, alpha, density, color}
-   * @param {object} textures   from loadTextures()
-   * @param {number} quality    particle multiplier (performance setting)
-   */
-  constructor(cfg, textures, quality = 1) {
+const sizeFactorOf = R => Math.min(2.5, Math.max(0.6, Math.sqrt(R / 50)));
+
+/** One layer of a ring: a design (band + sprites) or the user's own image, plus its effects. */
+class LivelyLayer extends PIXI.Container {
+  constructor(cfg, textures, quality) {
     super();
-    this.cfg = normalizeConfig(cfg);
+    this.cfg = cfg;
     this.textures = textures;
     this.quality = quality;
     this.time = Math.random() * 100;
-    this.R = 0;                   // set by setRadius()
-    this.eventMode = "none";
-    this.interactiveChildren = false;
-    this.#build();
+    this.R = 0;
+    this.band = null;
+    this.swarms = [];
+    this.isCustom = cfg.design === CUSTOM;
+    if (!this.isCustom) {
+      const design = DESIGNS[cfg.design];
+      const style = design.styles[cfg.style];
+      const [A, B, C] = palette(style, cfg.color);
+      const material = new PIXI.MeshMaterial(PIXI.Texture.WHITE, {
+        program: program(design.band),
+        uniforms: { uTime: 0, uA: new Float32Array(A), uB: new Float32Array(B), uC: new Float32Array(C), uP1: style.p1 ?? 0 }
+      });
+      this.band = new PIXI.Mesh(quadGeometry(), material);
+      this.band.blendMode = (style.blend ?? design.blend) === "add" ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+      this.addChild(this.band);
+      this.additive = (style.blend ?? design.blend) === "add";
+    } else {
+      this.additive = cfg.blend === "add";
+    }
+    this.#buildSwarms();
+    this.#buildFilters();
+    this.baseAlpha = cfg.alpha;
+    this.alpha = cfg.alpha;
   }
 
-  get key() { return JSON.stringify(this.cfg); }
-
-  #build() {
-    const design = DESIGNS[this.cfg.design];
-    const style = design.styles[this.cfg.style];
-    const [A, B, C] = palette(style, this.cfg.color);
-    const material = new PIXI.MeshMaterial(PIXI.Texture.WHITE, {
-      program: program(design.band),
-      uniforms: { uTime: 0, uA: new Float32Array(A), uB: new Float32Array(B), uC: new Float32Array(C), uP1: style.p1 ?? 0 }
-    });
-    this.band = new PIXI.Mesh(quadGeometry(), material);
-    this.band.blendMode = (style.blend ?? design.blend) === "add" ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
-    this.addChild(this.band);
-    this.swarms = [];
-    this.#buildSwarms();
-    this.alpha = this.cfg.alpha;
+  /** Sprite groups: the style's own, or the custom image as one group. */
+  #defs() {
+    const cfg = this.cfg;
+    if (!this.isCustom) return DESIGNS[cfg.design].styles[cfg.style].swarms ?? [];
+    const tex = this.textures.custom?.[cfg.src];
+    if (!tex) return [];
+    const m = MOTIONS[cfg.motion];
+    const tint = cfg.colorMode === "tint" && cfg.color ? cfg.color : "#ffffff";
+    return [{
+      textures: [tex], custom: true, count: m.single ? 1 : cfg.count, mode: m.mode, radius: m.radius, speed: m.speed, spin: m.spin,
+      size: m.single ? [cfg.size, cfg.size] : [cfg.size * 0.85, cfg.size * 1.15],
+      colors: [tint], blend: cfg.blend, alpha: 1
+    }];
   }
 
   #buildSwarms() {
     for (const s of this.swarms) { this.removeChild(s); s.destroy({ children: true }); }
     this.swarms = [];
-    const style = DESIGNS[this.cfg.design].styles[this.cfg.style];
-    const sizeFactor = Math.min(2.5, Math.max(0.6, Math.sqrt(this.R / 50)));
-    for (const def of style.swarms ?? []) {
-      const n = def.mode === "spinner" ? 1 : this.cfg.density <= 0 ? 0 : Math.max(1, Math.round(def.count * this.cfg.density * this.quality * sizeFactor));
-      const sw = new Swarm(def, this.textures, swarmColors(def, this.cfg.color), n);
+    const sizeFactor = sizeFactorOf(this.R);
+    const colorOverride = this.isCustom ? null : this.cfg.color;
+    for (const def of this.#defs()) {
+      let n;
+      if (def.mode === "spinner") n = 1;
+      else if (def.custom) n = Math.max(1, Math.round(def.count * this.quality * sizeFactor));
+      else n = this.cfg.density <= 0 ? 0 : Math.max(1, Math.round(def.count * this.cfg.density * this.quality * sizeFactor));
+      const sw = new Swarm(def, this.textures, swarmColors(def, colorOverride), n);
       this.swarms.push(sw);
       this.addChild(sw);
     }
     this._sizeFactor = sizeFactor;
   }
 
-  /** Set the token radius in pixels (before the ring's own scale). */
+  #buildFilters() {
+    const cfg = this.cfg;
+    const filters = [];
+    if (this.isCustom && cfg.colorMode === "colorize" && cfg.color) filters.push(colorizeFilter(cfg.color));
+    const hueBase = this.isCustom && cfg.colorMode === "hue" ? cfg.hue : 0;
+    if (hueBase || cfg.rainbow > 0) {
+      this.hueFilter = new (ColorMatrix())();
+      this.hueFilter.hue(hueBase, false);
+      filters.push(this.hueFilter);
+    }
+    if (cfg.glow > 0) filters.push(glowFilter(cfg.glow));
+    // A filter draws the layer into a texture first; keep additive layers additive on the map.
+    for (const f of filters) f.blendMode = this.additive ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+    this.filters = filters.length ? filters : null;
+  }
+
   setRadius(px) {
     const R = Math.max(8, px * this.cfg.scale);
     if (this.R && Math.abs(R - this.R) < 0.5) return;
     this.R = R;
-    this.band.scale.set(R);
-    const sf = Math.min(2.5, Math.max(0.6, Math.sqrt(R / 50)));
-    if (Math.abs(sf - (this._sizeFactor ?? 0)) > 0.15) this.#buildSwarms();
+    this.band?.scale.set(R);
+    if (Math.abs(sizeFactorOf(R) - (this._sizeFactor ?? 0)) > 0.15) this.#buildSwarms();
   }
 
-  /** Advance the animation by dt seconds. */
   update(dt) {
-    const sdt = dt * this.cfg.speed;
+    const cfg = this.cfg;
+    const sdt = dt * cfg.speed;
     this.time += sdt;
-    this.band.shader.uniforms.uTime = this.time;
-    for (const s of this.swarms) s.update(this.time, sdt, this.R);
+    const t = this.time;
+    if (this.band) this.band.shader.uniforms.uTime = t;
+    for (const s of this.swarms) s.update(t, sdt, this.R);
+    if (cfg.spin) this.rotation += cfg.spin * dt;
+    if (cfg.pulse > 0) {
+      const w = 0.5 + 0.5 * Math.sin(t * 2.6);
+      this.scale.set(1 + 0.12 * cfg.pulse * (w - 0.5));
+      this.alpha = this.baseAlpha * (1 - 0.45 * cfg.pulse * (1 - w));
+    }
+    if (this.hueFilter && cfg.rainbow > 0) {
+      const base = this.isCustom && cfg.colorMode === "hue" ? cfg.hue : 0;
+      this.hueFilter.hue((base + t * 140 * cfg.rainbow) % 360, false);
+    }
   }
 
   destroy(options) {
     this.band?.shader?.destroy?.();
+    super.destroy({ children: true, ...(options ?? {}) });
+  }
+}
+
+export class LivelyRing extends PIXI.Container {
+  /**
+   * @param {object} cfg        {layers: [...]} (see normalizeConfig)
+   * @param {object} textures   from loadTextures(), plus {custom: {src: PIXI.Texture}} for custom layers
+   * @param {number} quality    particle multiplier (performance setting)
+   */
+  constructor(cfg, textures, quality = 1) {
+    super();
+    this.cfg = normalizeConfig(cfg);
+    this.eventMode = "none";
+    this.interactiveChildren = false;
+    this.layers = this.cfg.layers.map(l => this.addChild(new LivelyLayer(l, textures, quality)));
+  }
+
+  get key() { return JSON.stringify(this.cfg); }
+
+  /** Set the token radius in pixels (before each layer's own scale). */
+  setRadius(px) {
+    for (const l of this.layers) l.setRadius(px);
+  }
+
+  /** Advance the animation by dt seconds. */
+  update(dt) {
+    for (const l of this.layers) l.update(dt);
+  }
+
+  destroy(options) {
     super.destroy({ children: true, ...(options ?? {}) });
   }
 }

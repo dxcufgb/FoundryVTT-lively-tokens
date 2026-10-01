@@ -9,6 +9,18 @@
       <p class="dxlt-target {{#unless canApply}}none{{/unless}}"><i class="fa-solid fa-user-large"></i> {{targetText}}</p>
       {{/if}}
       <p class="hint">{{localize "DXLT.App.PreviewHint"}}</p>
+
+      <h3>{{localize "DXLT.App.SavedEffects"}}</h3>
+      <div class="dxlt-presets">
+        <select name="preset">
+          <option value="">{{#if presets.length}}{{localize "DXLT.App.PickSaved"}}{{else}}{{localize "DXLT.App.NoneSaved"}}{{/if}}</option>
+          {{#each presets}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+        </select>
+        <button type="button" data-action="loadPreset" {{#unless hasPreset}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.LoadHint'}}"><i class="fa-solid fa-folder-open"></i></button>
+        <button type="button" data-action="savePreset" data-tooltip="{{localize 'DXLT.App.SaveHint'}}"><i class="fa-solid fa-floppy-disk"></i></button>
+        <button type="button" data-action="deletePreset" {{#unless hasPreset}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.DeleteHint'}}"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      <p class="hint">{{localize "DXLT.App.SavedHint"}}</p>
     </section>
 
     <section class="dxlt-right">
@@ -24,38 +36,102 @@
       <p class="hint dxlt-partners">{{localize "DXLT.App.PartnerInstalled"}} {{#each partnerModules}}<strong>{{this}}</strong> {{/each}}</p>
       {{/if}}
 
+      <h3>{{localize "DXLT.App.Layers"}} <small>{{localize "DXLT.App.LayersHint"}}</small></h3>
+      <div class="dxlt-layers">
+        {{#each layers}}
+        <button type="button" data-action="selectLayer" data-index="{{index}}" class="{{#if active}}active{{/if}}" data-tooltip="{{label}}">
+          {{#if thumb}}<img src="{{thumb}}" alt="">{{else}}<i class="{{icon}}"></i>{{/if}}<span>{{label}}</span>
+        </button>
+        {{/each}}
+        <button type="button" class="dxlt-add" data-action="addLayer" {{#unless canAddLayer}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.AddLayerHint'}}"><i class="fa-solid fa-plus"></i> {{localize "DXLT.App.AddLayer"}}</button>
+      </div>
+      <div class="dxlt-layer-tools">
+        <span>{{localize "DXLT.App.Editing" n=layerNumber of=layerCount}}</span>
+        <button type="button" data-action="moveLayer" data-dir="-1" {{#unless canMoveDown}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.MoveDown'}}"><i class="fa-solid fa-arrow-left"></i></button>
+        <button type="button" data-action="moveLayer" data-dir="1" {{#unless canMoveUp}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.MoveUp'}}"><i class="fa-solid fa-arrow-right"></i></button>
+        <button type="button" data-action="duplicateLayer" {{#unless canAddLayer}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.Duplicate'}}"><i class="fa-solid fa-clone"></i></button>
+        <button type="button" data-action="removeLayer" {{#unless canRemoveLayer}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.RemoveLayer'}}"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
       <h3>{{localize "DXLT.App.Design"}}</h3>
       <div class="dxlt-designs">
         {{#each designs}}
-        <button type="button" data-action="design" data-design="{{id}}" class="{{#if active}}active{{/if}}" data-tooltip="{{label}}">
+        <button type="button" data-action="design" data-design="{{id}}" class="{{#if active}}active{{/if}} {{#if custom}}custom{{/if}}" data-tooltip="{{label}}">
           <i class="{{icon}}"></i><span>{{label}}</span>
         </button>
         {{/each}}
       </div>
 
+      {{#if isCustom}}
+      <h3>{{localize "DXLT.App.CustomImage"}}</h3>
+      <div class="dxlt-image">
+        <div class="dxlt-thumb">{{#if src}}<img src="{{src}}" alt="">{{else}}<i class="fa-solid fa-image"></i>{{/if}}</div>
+        <div class="dxlt-image-src">
+          <input type="text" name="src" value="{{src}}" placeholder="{{localize 'DXLT.App.ImagePath'}}">
+          <div class="dxlt-image-buttons">
+            <button type="button" data-action="browseImage" {{#unless canBrowse}}disabled{{/unless}}><i class="fa-solid fa-folder-open"></i> {{localize "DXLT.App.Browse"}}</button>
+            <button type="button" data-action="uploadImage" {{#unless canUpload}}disabled{{/unless}}><i class="fa-solid fa-upload"></i> {{localize "DXLT.App.Upload"}}</button>
+            <input type="file" name="imageFile" accept="image/png,image/webp,image/*" hidden>
+          </div>
+          {{#unless canUpload}}<p class="hint">{{localize "DXLT.App.NoUpload"}}</p>{{/unless}}
+        </div>
+      </div>
+      <div class="dxlt-sliders">
+        <label>{{localize "DXLT.App.Motion"}}</label>
+        <select name="motion">{{#each motions}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+        <output></output>
+        {{#each customSliders}}
+        <label>{{localize label}}</label>
+        <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" data-fmt="{{fmt}}">
+        <output data-for="{{name}}">{{text}}</output>
+        {{/each}}
+        <label>{{localize "DXLT.App.ColorMode"}}</label>
+        <span class="dxlt-color">
+          <select name="colorMode">{{#each colorModes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+          {{#if showImageColor}}<input type="color" name="color" value="{{color}}">{{/if}}
+        </span>
+        <output></output>
+      </div>
+      <label class="dxlt-check">
+        <input type="checkbox" name="additive" {{checked additive}}>
+        {{localize "DXLT.App.Additive"}}
+      </label>
+      {{else}}
       <h3>{{localize "DXLT.App.Style"}} <small>{{designLabel}}</small></h3>
       <div class="dxlt-styles">
         {{#each styles}}
         <button type="button" data-action="style" data-style="{{id}}" class="{{#if active}}active{{/if}}">{{label}}</button>
         {{/each}}
       </div>
+      {{/if}}
 
       <h3>{{localize "DXLT.App.Tune"}}</h3>
       <div class="dxlt-sliders">
         {{#each sliders}}
         <label>{{localize label}}</label>
-        <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}">
+        <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" data-fmt="{{fmt}}">
         <output data-for="{{name}}">{{text}}</output>
         {{/each}}
+        {{#unless isCustom}}
         <label>{{localize "DXLT.App.Color"}}</label>
         <span class="dxlt-color">
           <input type="checkbox" name="useColor" {{checked useColor}} data-tooltip="{{localize 'DXLT.App.ColorHint'}}">
           <input type="color" name="color" value="{{color}}" {{#unless useColor}}disabled{{/unless}}>
         </span>
         <output></output>
+        {{/unless}}
       </div>
 
-      <label class="dxlt-proto">
+      <h3>{{localize "DXLT.App.Effects"}}</h3>
+      <div class="dxlt-sliders">
+        {{#each effects}}
+        <label>{{localize label}}</label>
+        <input type="range" name="{{name}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" data-fmt="{{fmt}}">
+        <output data-for="{{name}}">{{text}}</output>
+        {{/each}}
+      </div>
+
+      <label class="dxlt-check dxlt-proto">
         <input type="checkbox" name="prototype" {{checked prototype}} {{#if prototypeLocked}}disabled{{/if}}>
         {{localize "DXLT.App.Prototype"}}
       </label>
@@ -64,7 +140,7 @@
 
   <footer class="form-footer dxlt-footer">
     <button type="button" data-action="copy" {{#unless canCopy}}disabled{{/unless}} data-tooltip="{{localize 'DXLT.App.CopyHint'}}"><i class="fa-solid fa-eye-dropper"></i> {{localize "DXLT.App.Copy"}}</button>
-    <button type="button" data-action="reset"><i class="fa-solid fa-rotate-left"></i> {{localize "DXLT.App.Reset"}}</button>
+    <button type="button" data-action="reset" data-tooltip="{{localize 'DXLT.App.ResetHint'}}"><i class="fa-solid fa-rotate-left"></i> {{localize "DXLT.App.Reset"}}</button>
     <button type="button" data-action="remove" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-trash"></i> {{localize "DXLT.App.Remove"}}</button>
     <button type="button" data-action="apply" class="bright" {{#unless canApply}}disabled{{/unless}}><i class="fa-solid fa-check"></i> {{localize "DXLT.App.Apply"}}</button>
   </footer>
