@@ -16,11 +16,14 @@
  *   .clearRing(token)            remove it
  *   .designs                     available designs and styles
  *   .presets()                   this user's saved effects
+ *   .exportRing(cfg, name)       save a ring (with its own images) as one .lively-ring.json file
+ *   .importRing(file)            read such a file, add its images to this world -> {name, cfg, uploaded, skipped}
  */
 
 import { MODULE_ID, FLAG } from "./constants.js";
 import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing } from "./ring.js";
 import { LivelyTokensConfig } from "./config-app.js";
+import { exportRing, importRing } from "./transfer.js";
 
 export { MODULE_ID, FLAG };
 const TOOL = "dxcufgbs-lively-tokens";
@@ -58,7 +61,7 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "lastConfig", { scope: "client", config: false, type: Object, default: {} });
 
   const mod = game.modules.get(MODULE_ID);
-  if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, presets, designs: DESIGNS };
+  if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, presets, exportRing, importRing, designs: DESIGNS };
 });
 
 export function canUse() {

@@ -15,6 +15,7 @@ import {
   canUse, partners, partnerModules, setRing, clearRing, tokenRing, ringTextures,
   actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing, presets, savePreset, deletePreset
 } from "./main.js";
+import { exportRing, importRing } from "./transfer.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -51,6 +52,8 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       loadPreset: LivelyTokensConfig.#onLoadPreset,
       savePreset: LivelyTokensConfig.#onSavePreset,
       deletePreset: LivelyTokensConfig.#onDeletePreset,
+      exportRing: LivelyTokensConfig.#onExport,
+      importRing: LivelyTokensConfig.#onImport,
       apply: LivelyTokensConfig.#onApply,
       remove: LivelyTokensConfig.#onRemove,
       copy: LivelyTokensConfig.#onCopy,
@@ -279,6 +282,11 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       ev.currentTarget.value = "";
       if (file) this.#upload(file);
     });
+    html.querySelector("input[name=ringFile]")?.addEventListener("change", ev => {
+      const file = ev.currentTarget.files?.[0];
+      ev.currentTarget.value = "";
+      if (file) this.#import(file);
+    });
     html.querySelector("select[name=preset]")?.addEventListener("change", ev => {
       this.presetId = ev.currentTarget.value || null;
       this.render({ parts: ["main"] });
@@ -394,6 +402,40 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   /* -------------------------------------------- */
+  /*  Export / import                             */
+  /* -------------------------------------------- */
+
+  /** A preset name that isn't taken yet: "Name", "Name (2)", ... */
+  static #freeName(name) {
+    const taken = new Set(presets().map(p => p.name.toLowerCase()));
+    let candidate = name.slice(0, 60);
+    for (let i = 2; taken.has(candidate.toLowerCase()); i++) candidate = `${name.slice(0, 54)} (${i})`;
+    return candidate;
+  }
+
+  async #import(file) {
+    if (this._importing) return;
+    this._importing = true;
+    try {
+      const result = await importRing(file);
+      this.#setConfig(result.cfg);
+      const name = LivelyTokensConfig.#freeName(result.name);
+      this.presetId = await savePreset(name, result.cfg);
+      ui.notifications.info(game.i18n.format("DXLT.Transfer.Imported", { name, n: result.uploaded }));
+      if (result.skipped.length) {
+        ui.notifications.warn(game.i18n.format(game.user.can("FILES_UPLOAD") ? "DXLT.Transfer.ImageFailed" : "DXLT.Transfer.NoUploadImport",
+          { files: result.skipped.join(", ") }));
+      }
+      this.render({ parts: ["main"] });
+    } catch (err) {
+      console.error(`${MODULE_ID} | import failed`, err);
+      ui.notifications.error(game.i18n.format("DXLT.Transfer.ImportFailed", { error: err.message }));
+    } finally {
+      this._importing = false;
+    }
+  }
+
+  /* -------------------------------------------- */
   /*  Actions                                     */
   /* -------------------------------------------- */
 
@@ -502,6 +544,33 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     await deletePreset(p.id);
     this.presetId = null;
     this.render({ parts: ["main"] });
+  }
+
+  static async #onExport() {
+    const cfg = normalizeConfig(this.cfg);
+    const current = presets().find(x => x.id === this.presetId);
+    let name;
+    try {
+      name = await foundry.applications.api.DialogV2.prompt({
+        window: { title: "DXLT.Transfer.ExportTitle", icon: "fa-solid fa-file-export" },
+        content: `<p>${game.i18n.localize("DXLT.Transfer.ExportText")}</p>
+          <label>${game.i18n.localize("DXLT.App.SaveName")} <input type="text" name="name" value="${escapeHTML(current?.name ?? "")}" maxlength="60" autofocus></label>`,
+        ok: { label: "DXLT.Transfer.Export", icon: "fa-solid fa-file-export", callback: (ev, button) => button.form.elements.name.value },
+        rejectClose: false
+      });
+    } catch (_) { return; }
+    if (name === null || name === undefined) return;
+    try {
+      const { file } = await exportRing(cfg, name);
+      ui.notifications.info(game.i18n.format("DXLT.Transfer.Exported", { file }));
+    } catch (err) {
+      console.error(`${MODULE_ID} | export failed`, err);
+      ui.notifications.error(game.i18n.localize("DXLT.Transfer.ExportFailed"));
+    }
+  }
+
+  static #onImport() {
+    this.element.querySelector("input[name=ringFile]")?.click();
   }
 
   static async #onApply() {
