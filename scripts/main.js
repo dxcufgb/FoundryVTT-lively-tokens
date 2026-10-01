@@ -2,7 +2,10 @@
  * Dxcufgb's lively tokens (dxcufgbs-lively-tokens) - Foundry VTT V13
  *
  * Animated rings around tokens. A ring is stored on the token as a flag
- *   flags["dxcufgbs-lively-tokens"].ring = {design, style, scale, speed, alpha, density, color}
+ *   flags["dxcufgbs-lively-tokens"].ring = {layers: [{design, style, scale, speed, alpha, density, color,
+ *                                                      glow, pulse, rainbow, spin, ...}, ...]}
+ * Layers are drawn bottom to top, so several effects combine into one ring. A layer with
+ * design "custom" shows an image of the user's own (src) instead of a built-in design.
  * and drawn as a child of the Token placeable, so it moves, hides and sorts with the token
  * with no extra work (the same way Foundry's own combat turn marker works).
  *
@@ -12,10 +15,11 @@
  *   .setRing(token, cfg)         give a token (Token or TokenDocument) a ring
  *   .clearRing(token)            remove it
  *   .designs                     available designs and styles
+ *   .presets()                   this user's saved effects
  */
 
 import { MODULE_ID, FLAG } from "./constants.js";
-import { DESIGNS, normalizeConfig, loadTextures, LivelyRing } from "./ring.js";
+import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing } from "./ring.js";
 import { LivelyTokensConfig } from "./config-app.js";
 
 export { MODULE_ID, FLAG };
@@ -54,7 +58,7 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "lastConfig", { scope: "client", config: false, type: Object, default: {} });
 
   const mod = game.modules.get(MODULE_ID);
-  if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, designs: DESIGNS };
+  if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, presets, designs: DESIGNS };
 });
 
 export function canUse() {
@@ -115,6 +119,19 @@ export async function textures() {
   return state.textures;
 }
 
+/** The shared textures plus the user images a ring's custom layers need ({custom: {src: texture}}). */
+export async function ringTextures(cfg) {
+  const base = await textures();
+  const srcs = customSources(cfg);
+  if (!srcs.length) return base;
+  const custom = {};
+  await Promise.all(srcs.map(async src => {
+    try { custom[src] = await foundry.canvas.loadTexture(src); }
+    catch (err) { console.warn(`${MODULE_ID} | image ${src} could not be loaded`, err); }
+  }));
+  return { ...base, custom };
+}
+
 function ringFlag(doc) {
   return doc?.flags?.[MODULE_ID]?.[FLAG] ?? null;
 }
@@ -134,7 +151,7 @@ async function syncToken(token) {
   const cfg = normalizeConfig(flag);
   if (ring && ring.key === JSON.stringify(cfg)) { layout(token); return; }
 
-  const tex = await textures();
+  const tex = await ringTextures(cfg);
   if (token.destroyed) return;
   if (token._dxltRing && !token._dxltRing.destroyed) token._dxltRing.destroy();
   ring = new LivelyRing(cfg, tex, quality());
@@ -222,6 +239,33 @@ export async function clearRing(token, { prototype = false } = {}) {
 export function tokenRing(token) {
   const f = ringFlag(docOf(token));
   return f ? normalizeConfig(f) : null;
+}
+
+/* -------------------------------------------- */
+/*  Saved effects (per user)                    */
+/* -------------------------------------------- */
+
+/** This user's saved effects: [{id, name, cfg}], kept in a flag on their User document. */
+export function presets() {
+  const list = game.user.getFlag(MODULE_ID, "presets");
+  return Array.isArray(list) ? list.filter(p => p?.id && p.cfg) : [];
+}
+
+/** Save a ring under a name; an effect with the same name is replaced. Returns its id. */
+export async function savePreset(name, cfg) {
+  name = String(name ?? "").trim().slice(0, 60);
+  if (!name) return null;
+  const list = presets();
+  const old = list.find(p => p.name.toLowerCase() === name.toLowerCase());
+  const entry = { id: old?.id ?? foundry.utils.randomID(), name, cfg: normalizeConfig(cfg) };
+  const next = old ? list.map(p => (p === old ? entry : p)) : [...list, entry];
+  next.sort((a, b) => a.name.localeCompare(b.name));
+  await game.user.setFlag(MODULE_ID, "presets", next);
+  return entry.id;
+}
+
+export async function deletePreset(id) {
+  await game.user.setFlag(MODULE_ID, "presets", presets().filter(p => p.id !== id));
 }
 
 /** The world actor behind an actor (an unlinked token's synthetic actor stores its prototype there). */
