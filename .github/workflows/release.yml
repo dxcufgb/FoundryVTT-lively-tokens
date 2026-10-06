@@ -37,16 +37,21 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Run the CI checks
         run: node .github/ci/check-module.mjs
 
       - name: Build module.json and module.zip
-        run: bash .github/ci/package.sh "${{ inputs.tag || github.ref_name }}"
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: bash .github/ci/package.sh "$RELEASE_TAG"
 
       - name: Attach files to the release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
