@@ -1,11 +1,12 @@
-# Builds and publishes the module whenever a GitHub Release is published.
+# Builds and publishes the module.
 #
-# How to release a new version:
-#   1. Push your changes.
-#   2. On GitHub: Releases -> "Draft a new release" -> create a tag like v1.0.1
-#      (the version number in module.json is taken from this tag).
-#   3. Click "Publish release". This workflow then attaches module.json and
-#      module.zip to the release.
+# How to release a new version (either way works):
+#   - On GitHub: Releases -> "Draft a new release" -> create a tag like v1.0.1 -> "Generate
+#     release notes" -> "Publish release". This workflow then attaches module.json and module.zip.
+#   - Or: Actions -> "Release module" -> "Run workflow" -> enter v1.0.1. The release is created
+#     on the chosen branch with notes generated from the merged pull requests.
+# The version number in module.json is taken from the tag. The same checks as CI run first,
+# so a broken module is never published.
 #
 # The manifest link people install from always points at the newest release:
 #   https://github.com/<owner>/<repo>/releases/latest/download/module.json
@@ -15,51 +16,44 @@ name: Release module
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to release, e.g. v1.0.1 (created on the chosen branch if it does not exist)"
+        required: true
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - name: Work out version and URLs
-        id: meta
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "url=${REPO_URL}" >> "$GITHUB_OUTPUT"
-          echo "manifest=${REPO_URL}/releases/latest/download/module.json" >> "$GITHUB_OUTPUT"
-          echo "download=${REPO_URL}/releases/download/${TAG}/module.zip" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
 
-      - name: Fill in module.json
-        run: |
-          jq \
-            --arg version  "${{ steps.meta.outputs.version }}" \
-            --arg url      "${{ steps.meta.outputs.url }}" \
-            --arg manifest "${{ steps.meta.outputs.manifest }}" \
-            --arg download "${{ steps.meta.outputs.download }}" \
-            '.version = $version | .url = $url | .manifest = $manifest | .download = $download
-             | .bugs = ($url + "/issues") | .readme = ($url + "#readme")' \
-            module.json > module.tmp.json
-          mv module.tmp.json module.json
-          cat module.json
+      - name: Run the CI checks
+        run: node .github/ci/check-module.mjs
 
-      - name: Build module.zip
-        run: |
-          zip -r module.zip . \
-            -x ".git/*" ".github/*" ".gitignore" ".gitattributes" "module.zip" "*.tmp.json"
-          unzip -l module.zip
+      - name: Build module.json and module.zip
+        run: bash .github/ci/package.sh "${{ inputs.tag || github.ref_name }}"
 
       - name: Attach files to the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}
+          generate_release_notes: ${{ github.event_name == 'workflow_dispatch' }}
           files: |
             module.json
             module.zip

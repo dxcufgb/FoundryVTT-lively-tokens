@@ -1,0 +1,42 @@
+# Checks every push and pull request (required to pass before merging into main):
+#   - module.json is valid and points at files that exist
+#   - all scripts parse, language files are valid JSON, referenced templates exist
+#   - the module imports with stubbed Foundry globals, its init/setup hooks run, and every
+#     visible setting has its Name and Hint in lang/en.json
+#   - the release packaging (the same script release.yml runs) still works
+# No dependencies to install; see .github/ci/.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check module
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+
+      - name: Validate manifest, scripts and translations
+        run: node .github/ci/check-module.mjs
+
+      - name: Dry-run the release packaging
+        run: |
+          bash .github/ci/package.sh v0.0.0-ci
+          git checkout -- module.json
+          rm -f module.zip
