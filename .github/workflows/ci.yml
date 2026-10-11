@@ -1,10 +1,6 @@
-# Checks every push and pull request (required to pass before merging into main):
-#   - module.json is valid and points at files that exist
-#   - all scripts parse, language files are valid JSON, referenced templates exist
-#   - the module imports with stubbed Foundry globals, its init/setup hooks run, and every
-#     visible setting has its Name and Hint in lang/en.json
-#   - the release packaging (the same script release.yml runs) still works
-# No dependencies to install; see .github/ci/.
+# CI for this Foundry module. Identical in every dxcufgb Foundry module repository; the checks
+# themselves live in dxcufgb/foundry-module-ci (module-specific settings: .github/foundry-module.json).
+# The job name "Check module" is a required status check in the repository ruleset.
 
 name: CI
 
@@ -24,21 +20,11 @@ jobs:
   check:
     name: Check module
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          lfs: true
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-
-      - name: Validate manifest, scripts and translations
-        run: node .github/ci/check-module.mjs
-
-      - name: Dry-run the release packaging
-        run: |
-          bash .github/ci/package.sh v0.0.0-ci
-          git checkout -- module.json
-          rm -f module.zip
+      - uses: dxcufgb/foundry-module-ci/check@4525ac06910f7e045b9a82916967538366902ff4 # v1.0.0

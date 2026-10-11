@@ -8,6 +8,7 @@ updates:
       day: monday
     cooldown:
       default-days: 7
+      exclude: ["dxcufgb/*"] # shared module workflows: take fixes right away
     groups:
       actions:
         patterns: ["*"]
