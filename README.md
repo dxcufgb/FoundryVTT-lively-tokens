@@ -38,7 +38,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   | Orbiting Stones | Granite, Sandstone, Obsidian, Jade |
   | Knives | Steel, Assassin, Gilded, Spectral |
 
-- **Layers: combine effects into one ring.** Stack up to 6 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
+- **Layers: combine effects into one ring.** Stack up to 20 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
 - **Your own image as an effect.** Pick *Your image*, then **Browse** to an image or **Upload** a PNG (it goes into `worlds/<your world>/dxcufgbs-lively-tokens/`). Choose how it moves (centred, turning, circling, drifting, rising, fluttering, puffs, swirling in), its size and how many, and its colour:
   - *Original colours*, *Tint* (multiply by a colour), *Recolour* (keep the light and shade, paint it in one colour) or *Shift hue*
   - optionally *Glow like light* (additive blending)
