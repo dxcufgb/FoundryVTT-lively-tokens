@@ -810,7 +810,7 @@ export const DESIGNS = {
 
 /** The design id of a layer that shows the user's own image. */
 export const CUSTOM = "custom";
-export const MAX_LAYERS = 6;
+export const MAX_LAYERS = 20;
 
 /**
  * How a custom image moves. mode/radius/speed/spin feed the Swarm, size and count are the defaults
