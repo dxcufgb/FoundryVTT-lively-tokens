@@ -1,6 +1,6 @@
 # Dxcufgb's lively tokens
 
-Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class and species. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class, species and background. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
 
@@ -14,7 +14,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ## Features
 
-- **44 ring designs, each with several styles:**
+- **63 ring designs, each with several styles:**
 
   | Design | Styles |
   | --- | --- |
@@ -62,8 +62,27 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   | Hellish Legacy (Tiefling) | Infernal, Abyssal, Chthonic, Zariel |
   | Twin Heritage (Half-Elf) | Dawn, Dusk, Sylvan, Mariner |
   | Relentless (Half-Orc) | Iron, Blood, Ash, Moss |
+  | Votive Glow (Acolyte) | Temple, Moon Shrine, Grove Shrine, Shadow Shrine |
+  | Maker's Mark (Artisan) | Smith, Carpenter, Jeweler, Glassblower |
+  | Sleight of Hand (Charlatan) | Hearts, Spades, Gilded, Illusory |
+  | Alley Smoke (Criminal) | Burglar, Smuggler, Fence, Enforcer |
+  | Showstopper (Entertainer) | Minstrel, Dancer, Jester, Torchlight |
+  | Harvest Breeze (Farmer) | Wheat, Orchard, Vineyard, Pumpkin Patch |
+  | Lantern Watch (Guard) | City Watch, Gate Ward, Temple Guard, Night Watch |
+  | Waypoint (Guide) | North Star, Forest Path, Desert Road, Mountain Pass |
+  | Still Mind (Hermit) | Cave, Grove, Mountain, Bog |
+  | Coin Shower (Merchant) | Gold, Silver, Copper, Platinum |
+  | Regal Bearing (Noble) | Royal, Crimson Court, Sapphire, Emerald |
+  | Ink & Lore (Sage) | Ink, Gilded Page, Verdigris, Crimson Ink |
+  | Sea Spray (Sailor) | Open Sea, Tropical, Storm Swell, Ghost Ship |
+  | Quillwork (Scribe) | Parchment, Vellum, Illuminated, Midnight Oil |
+  | Veteran's March (Soldier) | Legion, Mercenary, Cavalry, Siege |
+  | Wanderlust (Wayfarer) | Spring, Autumn, Dusk Road, Winter Road |
+  | Hearthfire (Folk Hero) | Hearth, Harvest Moon, Blue Flame, Bonfire |
+  | Starlit Camp (Outlander) | Tundra, Steppe, Jungle, Badlands |
+  | Street Scraps (Urchin) | Alley, Market, Dockside, Sewer |
 
-  The designs marked with a D&D class or species are particle effects only (no ring band): one per 5e class, with styles named after its subclasses, and one per species (race) from the 2024 and 2014 rules, with styles named after its lineages, ancestries and legacies.
+  The designs marked with a D&D class, species or background are particle effects only (no ring band): one per 5e class, with styles named after its subclasses; one per species (race) from the 2024 and 2014 rules, with styles named after its lineages, ancestries and legacies; and one per background from the 2024 and 2014 rules (Guild Artisan is covered by Artisan).
 
 - **Layers: combine effects into one ring.** Stack up to 20 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
 - **Your own image as an effect.** Pick *Your image*, then **Browse** to an image or **Upload** a PNG (it goes into `worlds/<your world>/dxcufgbs-lively-tokens/`). Choose how it moves (centred, turning, circling, drifting, rising, fluttering, puffs, swirling in), its size and how many, and its colour:

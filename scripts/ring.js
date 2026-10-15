@@ -1186,6 +1186,269 @@ export const DESIGNS = {
       ash: ["Ash", "#ffe8c0", "#e07a2a", "#2a1a10"],
       moss: ["Moss", "#e8ffc0", "#6aa84a", "#1a2a10"]
     })
+  },
+
+  votiveglow: {
+    label: "Votive Glow", icon: "fa-solid fa-place-of-worship", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 4, life: [2.5, 3.5], radius: [1.1, 1.25], size: [0.1, 0.4], out: [0.06, 0.12], swirl: 0.12, colors: [[0, "#d8d4cc", 0], [0.2, "#d8d4cc", 0.22], [1, "#d8d4cc", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 70, group: 5, lead: 0.2, swirl: 0, life: [0.25, 0.5], radius: [1.22, 1.25], size: [0.08, 0.02], out: [0, 0.03], flicker: 0.35, colors: RAMP.hot() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 3, life: [1, 2], radius: [1.0, 1.35], size: [0.07, 0.01], out: [0.02, 0.05], flicker: 0.6, colors: RAMP.glow() }
+    ], {
+      temple: ["Temple", "#fff4c0", "#ffb84a", "#6a3000"],
+      moonshrine: ["Moon Shrine", "#ffffff", "#b8d0ff", "#2a3a6a"],
+      groveshrine: ["Grove Shrine", "#f0ffd0", "#8ad85a", "#1a3a10"],
+      shadowshrine: ["Shadow Shrine", "#f0d8ff", "#a05aff", "#1a0a2a"]
+    })
+  },
+
+  makersmark: {
+    label: "Maker's Mark", icon: "fa-solid fa-palette", blend: "add",
+    styles: emitStyles([
+      { tex: "rock", mode: "emit", blend: "normal", rate: 9, life: [0.6, 1.1], radius: [1.0, 1.1], size: [0.07, 0.05], out: [0.3, 0.6], spin: 3, colors: [[0, "main", 0], [0.1, "main", 1], [0.8, "main", 1], [1, "main", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 16, life: [0.15, 0.4], radius: [1.0, 1.1], size: [0.1, 0.01], out: [0.4, 0.9], spin: 4, colors: RAMP.hot() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 3, life: [0.6, 1.2], radius: [1.05, 1.35], size: [0.1, 0.02], out: [0, 0.03], flicker: 0.7, colors: RAMP.glow() }
+    ], {
+      smith: ["Smith", "#ffe8b0", "#ff8a2a", "#3a1a08"],
+      carpenter: ["Carpenter", "#fff0c8", "#c8904a", "#3a2410"],
+      jeweler: ["Jeweler", "#fff0f8", "#ff6ab8", "#3a0a2a"],
+      glassblower: ["Glassblower", "#f0ffff", "#5ad8e8", "#0a3a4a"]
+    })
+  },
+
+  sleightofhand: {
+    label: "Sleight of Hand", icon: "fa-solid fa-masks-theater", blend: "add",
+    styles: emitStyles([
+      { tex: "card", mode: "emit", blend: "normal", rate: 18, group: 3, lead: 1.1, swirl: 0, life: [0.4, 0.7], radius: [1.28, 1.3], size: [0.13, 0.12], out: [0, 0], spin: 0.5, colors: [[0, "bright", 0], [0.15, "bright", 0.95], [0.7, "main", 0.7], [1, "main", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 60, group: 3, lead: 1.1, swirl: 0.05, life: [0.3, 0.6], radius: [1.26, 1.32], size: [0.04, 0], out: [0, 0], colors: RAMP.glow(0.8) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 6, life: [0.6, 1.2], radius: [1.0, 1.4], size: [0.07, 0.01], out: [0.02, 0.06], flicker: 0.7, spin: 2, colors: RAMP.glow() }
+    ], {
+      hearts: ["Hearts", "#ffffff", "#e0283a", "#3a0208"],
+      spades: ["Spades", "#ffffff", "#5a6070", "#0a0c10"],
+      gilded: ["Gilded", "#fff8d0", "#e8b84a", "#3a2608"],
+      illusory: ["Illusory", "#f8e8ff", "#b46aff", "#1a0a3a"]
+    })
+  },
+
+  alleysmoke: {
+    label: "Alley Smoke", icon: "fa-solid fa-user-secret", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 12, life: [1.8, 2.8], radius: [0.95, 1.15], size: [0.18, 0.55], out: [0.04, 0.1], swirl: 0.18, colors: RAMP.shade(0.7) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 30, group: 2, lead: 0.25, swirl: 0, life: [0.3, 0.5], radius: [1.3, 1.3], size: [0.045, 0.02], out: [0, 0], flicker: 0.5, colors: RAMP.bright() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 1.5, life: [0.3, 0.5], radius: [1.0, 1.3], size: [0.12, 0.02], out: [0, 0.02], colors: RAMP.glow() }
+    ], {
+      burglar: ["Burglar", "#e8eef4", "#4a5058", "#08090c"],
+      smuggler: ["Smuggler", "#ffe0b0", "#8a6a4a", "#0c0806"],
+      fence: ["Fence", "#e0ffe0", "#4a8a5a", "#040a06"],
+      enforcer: ["Enforcer", "#ffd0c8", "#a02a2a", "#0a0204"]
+    })
+  },
+
+  showstopper: {
+    label: "Showstopper", icon: "fa-solid fa-drum", blend: "add",
+    styles: emitStyles([
+      { tex: "note", mode: "emit", blend: "normal", rate: 6, life: [2, 3], radius: [1.0, 1.2], size: [0.13, 0.11], out: [0.08, 0.15], swirl: 0.3, wobble: 0.2, colors: [[0, "main", 0], [0.12, "main", 1], [0.7, "main", 0.9], [1, "dark", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 12, life: [0.6, 1.2], radius: [1.0, 1.3], size: [0.07, 0.01], out: [0.1, 0.3], swirl: 0.3, flicker: 0.5, spin: 3, colors: RAMP.mixed() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 6, life: [1, 2], radius: [1.0, 1.3], size: [0.05, 0.02], out: [0.03, 0.08], wobble: 0.3, colors: RAMP.glow() }
+    ], {
+      minstrel: ["Minstrel", "#fff8d0", "#ffc84a", "#5a3000"],
+      dancer: ["Dancer", "#fff0f6", "#ff6aa8", "#4a0a2a"],
+      jester: ["Jester", "#ffffff", "#ff5a3a", "#3a8aff"],
+      torchlight: ["Torchlight", "#ffe8c0", "#ff8a2a", "#4a1000"]
+    })
+  },
+
+  harvestbreeze: {
+    label: "Harvest Breeze", icon: "fa-solid fa-wheat-awn", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 3, life: [1.5, 2.5], radius: [1.0, 1.1], size: [0.15, 0.4], out: [0.05, 0.1], swirl: 0.4, colors: [[0, "#c8b890", 0], [0.2, "#c8b890", 0.2], [1, "#c8b890", 0]] },
+      { tex: "petal", mode: "emit", blend: "normal", rate: 9, life: [2, 3], radius: [1.0, 1.2], size: [0.09, 0.08], out: [0.05, 0.1], swirl: 0.55, wobble: 0.2, spin: 2, colors: RAMP.leaf(0.9) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 8, life: [2, 3], radius: [1.0, 1.35], size: [0.035, 0.02], out: [0.02, 0.06], swirl: 0.45, wobble: 0.3, colors: RAMP.bright(0.8) }
+    ], {
+      wheat: ["Wheat", "#fff4c0", "#e0b850", "#4a3010"],
+      orchard: ["Orchard", "#fff0f0", "#ff8a9a", "#3a1a10"],
+      vineyard: ["Vineyard", "#f8e8ff", "#8a4ab8", "#2a1030"],
+      pumpkinpatch: ["Pumpkin Patch", "#fff0c0", "#ff8a1a", "#2a3a10"]
+    })
+  },
+
+  lanternwatch: {
+    label: "Lantern Watch", icon: "fa-solid fa-tower-observation", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 60, group: 1, lead: 0.6, swirl: 0, life: [0.6, 1.0], radius: [1.05, 1.15], size: [0.12, 0.3], out: [0.25, 0.4], colors: RAMP.main(0.28) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 50, group: 1, lead: 0.6, swirl: 0, life: [0.4, 0.7], radius: [1.2, 1.24], size: [0.07, 0.02], out: [0, 0], colors: RAMP.glow() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 4, life: [1.5, 2.5], radius: [1.05, 1.4], size: [0.07, 0.015], out: [0, 0.02], flicker: 0.3, colors: RAMP.glow() }
+    ], {
+      citywatch: ["City Watch", "#fff4d0", "#ffb84a", "#4a2a00"],
+      gateward: ["Gate Ward", "#ffffff", "#9ab8d8", "#1a2a3a"],
+      templeguard: ["Temple Guard", "#fffbe0", "#ffd84a", "#5a4000"],
+      nightwatch: ["Night Watch", "#e8ffff", "#4ad8d8", "#0a2a3a"]
+    })
+  },
+
+  waypoint: {
+    label: "Waypoint", icon: "fa-solid fa-compass", blend: "add",
+    styles: emitStyles([
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 16, group: 4, lead: 0.15, swirl: 0, life: [0.6, 1.0], radius: [1.15, 1.2], size: [0.1, 0.02], out: [0.2, 0.35], colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 40, group: 4, lead: 0.15, swirl: 0, life: [0.4, 0.7], radius: [1.15, 1.18], size: [0.06, 0.02], out: [0, 0], colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 6, life: [2, 3.5], radius: [1.0, 1.45], size: [0.04, 0.015], out: [0, 0.04], wobble: 0.3, flicker: 0.4, colors: RAMP.bright(0.8) }
+    ], {
+      northstar: ["North Star", "#ffffff", "#9ac8ff", "#1a2a5a"],
+      forestpath: ["Forest Path", "#f0ffd0", "#7ac85a", "#1a3a10"],
+      desertroad: ["Desert Road", "#fff4d0", "#e8a84a", "#4a2a08"],
+      mountainpass: ["Mountain Pass", "#ffffff", "#b8c0c8", "#3a4048"]
+    })
+  },
+
+  stillmind: {
+    label: "Still Mind", icon: "fa-solid fa-person-praying", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "add", rate: 4, life: [3, 4], radius: [1.05, 1.25], size: [0.25, 0.5], out: [-0.04, 0.02], swirl: 0.08, colors: RAMP.main(0.18) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 9, life: [3, 4.5], radius: [1.5, 1.7], size: [0.04, 0.08], out: [-0.12, -0.08], swirl: 0.06, wobble: 0.15, flicker: 0.3, colors: RAMP.bright() }
+    ], {
+      cave: ["Cave", "#fff0c8", "#d8a050", "#2a1a08"],
+      grove: ["Grove", "#f0ffe0", "#7ac87a", "#0a2a14"],
+      mountain: ["Mountain", "#ffffff", "#c8d8e8", "#3a4a5a"],
+      bog: ["Bog", "#e8f0c0", "#8a9a4a", "#1a2008"]
+    })
+  },
+
+  coinshower: {
+    label: "Coin Shower", icon: "fa-solid fa-coins", blend: "normal",
+    styles: emitStyles([
+      { tex: "coin", mode: "emit", blend: "normal", rate: 8, life: [1.2, 2], radius: [1.0, 1.15], size: [0.1, 0.09], out: [0.12, 0.25], swirl: 0.2, spin: 3, colors: [[0, "main", 0], [0.1, "main", 1], [0.75, "main", 1], [1, "main", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 12, life: [0.5, 1], radius: [1.0, 1.35], size: [0.09, 0.015], out: [0.05, 0.15], flicker: 0.6, spin: 2, colors: RAMP.glow() }
+    ], {
+      gold: ["Gold", "#fff8c8", "#e8b83a", "#5a3a00"],
+      silver: ["Silver", "#ffffff", "#c0c8d0", "#3a4048"],
+      copper: ["Copper", "#ffe0c0", "#c8743a", "#3a1a08"],
+      platinum: ["Platinum", "#ffffff", "#d8e8f0", "#5a6a7a"]
+    })
+  },
+
+  regalbearing: {
+    label: "Regal Bearing", icon: "fa-solid fa-crown", blend: "add",
+    styles: emitStyles([
+      { tex: "petal", mode: "emit", blend: "normal", rate: 4, life: [2.5, 3.5], radius: [1.0, 1.2], size: [0.09, 0.07], out: [0.05, 0.1], swirl: 0.15, wobble: 0.2, spin: 1.2, colors: RAMP.leaf(0.9) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 50, group: 2, lead: 0.7, life: [0.5, 0.8], radius: [1.24, 1.27], size: [0.06, 0], out: [0, 0], colors: RAMP.bright() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 7, life: [1, 2], radius: [1.0, 1.35], size: [0.08, 0.015], out: [0.02, 0.06], flicker: 0.6, colors: RAMP.bright() }
+    ], {
+      royal: ["Royal", "#fff4d0", "#8a3ad8", "#1a0a3a"],
+      crimsoncourt: ["Crimson Court", "#fff0d0", "#c0182a", "#3a0208"],
+      sapphire: ["Sapphire", "#f0f8ff", "#2a6ad8", "#0a1a4a"],
+      emerald: ["Emerald", "#fff8d0", "#1aa85a", "#062a14"]
+    })
+  },
+
+  inklore: {
+    label: "Ink & Lore", icon: "fa-solid fa-scroll", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 9, life: [1.5, 2.5], radius: [1.0, 1.15], size: [0.08, 0.3], out: [0.05, 0.12], swirl: 0.35, wobble: 0.2, colors: RAMP.shade(0.65) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 10, life: [2, 3], radius: [1.0, 1.4], size: [0.045, 0.015], out: [0.01, 0.05], swirl: 0.15, wobble: 0.25, flicker: 0.4, colors: RAMP.bright() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 3, life: [1, 2], radius: [1.05, 1.4], size: [0.08, 0.01], out: [0.02, 0.05], flicker: 0.7, colors: RAMP.glow() }
+    ], {
+      ink: ["Ink", "#d8e8ff", "#3a5aa8", "#06081a"],
+      gildedpage: ["Gilded Page", "#fff8d0", "#d8b04a", "#1a1408"],
+      verdigris: ["Verdigris", "#e0fff4", "#3ab890", "#04140e"],
+      crimsonink: ["Crimson Ink", "#ffe0d8", "#c03a3a", "#140404"]
+    })
+  },
+
+  seaspray: {
+    label: "Sea Spray", icon: "fa-solid fa-anchor", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "add", rate: 8, life: [1, 1.8], radius: [1.0, 1.1], size: [0.15, 0.45], out: [0.15, 0.3], swirl: 0.25, colors: RAMP.bright(0.26) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 22, life: [0.4, 0.8], radius: [1.0, 1.1], size: [0.035, 0.01], out: [0.4, 0.8], swirl: 0.25, colors: RAMP.bright() },
+      { tex: "bubble", mode: "emit", blend: "add", rate: 5, life: [1.5, 2.5], radius: [1.0, 1.25], size: [0.04, 0.08], out: [0.05, 0.12], wobble: 0.3, colors: RAMP.bright(0.85) }
+    ], {
+      opensea: ["Open Sea", "#f0ffff", "#5ab8e8", "#0a2a4a"],
+      tropical: ["Tropical", "#f0fff8", "#3ae0c8", "#04404a"],
+      stormswell: ["Storm Swell", "#e8eef4", "#7a8a9a", "#1a2028"],
+      ghostship: ["Ghost Ship", "#e8fff0", "#7ae8b0", "#0a2a1a"]
+    })
+  },
+
+  quillwork: {
+    label: "Quillwork", icon: "fa-solid fa-feather-pointed", blend: "normal",
+    styles: emitStyles([
+      { tex: "card", mode: "emit", blend: "normal", rate: 3, life: [2, 3], radius: [1.0, 1.2], size: [0.1, 0.09], out: [0.05, 0.1], swirl: 0.25, wobble: 0.15, spin: 1.2, colors: [[0, "main", 0], [0.12, "main", 1], [0.75, "main", 0.9], [1, "main", 0]] },
+      { tex: "petal", mode: "emit", blend: "normal", rate: 2, life: [2.5, 3.5], radius: [1.0, 1.2], size: [0.1, 0.09], out: [0.04, 0.08], swirl: 0.2, wobble: 0.25, spin: 1, colors: [[0, "bright", 0], [0.12, "bright", 0.95], [1, "main", 0]] },
+      { tex: "glow", mode: "emit", blend: "normal", rate: 6, life: [0.8, 1.4], radius: [1.0, 1.3], size: [0.035, 0.02], out: [0.02, 0.06], colors: [[0, "dark", 0], [0.1, "dark", 0.9], [1, "dark", 0]] }
+    ], {
+      parchment: ["Parchment", "#fff8e8", "#e8d8b0", "#3a3020"],
+      vellum: ["Vellum", "#ffffff", "#f0ece0", "#5a5040"],
+      illuminated: ["Illuminated", "#fff8d0", "#e8c050", "#3a2a08"],
+      midnightoil: ["Midnight Oil", "#f0e8ff", "#8a7ab8", "#100a20"]
+    })
+  },
+
+  veteransmarch: {
+    label: "Veteran's March", icon: "fa-solid fa-chess-knight", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 7, life: [1.2, 2], radius: [1.0, 1.1], size: [0.15, 0.5], out: [0.12, 0.25], colors: [[0, "#a89880", 0], [0.2, "#a89880", 0.35], [1, "#a89880", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 45, group: 2, lead: 0.9, life: [0.4, 0.7], radius: [1.22, 1.26], size: [0.06, 0], out: [0, 0], colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 12, life: [0.8, 1.6], radius: [0.95, 1.15], size: [0.05, 0.015], out: [0.1, 0.25], flicker: 0.4, colors: RAMP.hot() }
+    ], {
+      legion: ["Legion", "#ffe0c0", "#c0302a", "#2a0804"],
+      mercenary: ["Mercenary", "#ffffff", "#a8b0b8", "#2a2e34"],
+      cavalry: ["Cavalry", "#fff0d0", "#a87a4a", "#2a1a0a"],
+      siege: ["Siege", "#ffe8b0", "#ff7a1a", "#2a1408"]
+    })
+  },
+
+  wanderlust: {
+    label: "Wanderlust", icon: "fa-solid fa-route", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 4, life: [1, 1.6], radius: [1.0, 1.1], size: [0.12, 0.4], out: [0.05, 0.12], swirl: 0.7, colors: [[0, "#b8b0a0", 0], [0.2, "#b8b0a0", 0.32], [1, "#b8b0a0", 0]] },
+      { tex: "leaf", mode: "emit", blend: "normal", rate: 10, life: [1.2, 2], radius: [1.05, 1.25], size: [0.1, 0.09], out: [0.03, 0.08], swirl: 0.85, wobble: 0.2, spin: 3, colors: RAMP.leaf(0.9) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 30, life: [0.4, 0.8], radius: [1.15, 1.35], size: [0.045, 0.01], out: [0, 0.03], swirl: 0.9, colors: RAMP.bright(0.7) }
+    ], {
+      spring: ["Spring", "#f0ffd0", "#7ad85a", "#1a3a10"],
+      autumn: ["Autumn", "#ffe0a0", "#e07a2a", "#3a1a08"],
+      duskroad: ["Dusk Road", "#ffe0f0", "#b06aa8", "#2a1028"],
+      winterroad: ["Winter Road", "#ffffff", "#c8dcec", "#3a4a5a"]
+    })
+  },
+
+  hearthfire: {
+    label: "Hearthfire", icon: "fa-solid fa-fire-burner", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 22, life: [1, 1.8], radius: [0.95, 1.1], size: [0.06, 0.015], out: [0.12, 0.28], wobble: 0.25, flicker: 0.4, colors: RAMP.hot() },
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 3, life: [1.8, 2.6], radius: [1.0, 1.1], size: [0.12, 0.45], out: [0.08, 0.15], swirl: 0.1, colors: RAMP.shade(0.35) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 60, group: 1, lead: 1.0, life: [0.5, 0.9], radius: [1.28, 1.3], size: [0.07, 0], out: [0, 0], colors: RAMP.glow() }
+    ], {
+      hearth: ["Hearth", "#ffe8b0", "#ff8a2a", "#5a1000"],
+      harvestmoon: ["Harvest Moon", "#fff4d0", "#ffc04a", "#5a2a00"],
+      blueflame: ["Blue Flame", "#e8f8ff", "#4aa8ff", "#0a1a5a"],
+      bonfire: ["Bonfire", "#fff0c0", "#ff5a1a", "#3a0400"]
+    })
+  },
+
+  starlitcamp: {
+    label: "Starlit Camp", icon: "fa-solid fa-campground", blend: "add",
+    styles: emitStyles([
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 9, life: [2, 3.5], radius: [1.15, 1.5], size: [0.07, 0.02], out: [0, 0.02], swirl: 0.06, flicker: 0.7, colors: [[0, "#ffffff", 0], [0.2, "bright", 0.95], [0.8, "bright", 0.7], [1, "bright", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 14, life: [0.8, 1.5], radius: [0.95, 1.1], size: [0.05, 0.015], out: [0.1, 0.3], wobble: 0.3, flicker: 0.4, colors: RAMP.hot() }
+    ], {
+      tundra: ["Tundra", "#ffffff", "#9ad8ff", "#1a3a5a"],
+      steppe: ["Steppe", "#fff4d0", "#e8a84a", "#3a2008"],
+      jungle: ["Jungle", "#f0ffd0", "#5ad86a", "#0a2a10"],
+      badlands: ["Badlands", "#ffe0c0", "#e0603a", "#2a0a04"]
+    })
+  },
+
+  streetscraps: {
+    label: "Street Scraps", icon: "fa-solid fa-newspaper", blend: "normal",
+    styles: emitStyles([
+      { tex: "card", mode: "emit", blend: "normal", rate: 7, life: [1.5, 2.5], radius: [1.05, 1.25], size: [0.1, 0.09], out: [0.02, 0.06], swirl: 0.6, wobble: 0.3, spin: 3, colors: [[0, "main", 0], [0.12, "main", 0.95], [0.8, "main", 0.85], [1, "main", 0]] },
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 5, life: [1, 1.8], radius: [1.0, 1.15], size: [0.12, 0.4], out: [0.03, 0.08], swirl: 0.6, colors: RAMP.shade(0.45) },
+      { tex: "rock", mode: "emit", blend: "normal", rate: 6, life: [0.8, 1.4], radius: [1.05, 1.25], size: [0.035, 0.03], out: [0.02, 0.06], swirl: 0.7, spin: 4, colors: [[0, "dark", 0], [0.1, "dark", 1], [1, "dark", 0]] }
+    ], {
+      alley: ["Alley", "#f0ece0", "#a8a090", "#2a2820"],
+      market: ["Market", "#fff0d0", "#d8a85a", "#3a2410"],
+      dockside: ["Dockside", "#e8f4f8", "#7a9aa8", "#1a2a30"],
+      sewer: ["Sewer", "#e8f0c8", "#7a8a4a", "#141a08"]
+    })
   }
 };
 
@@ -1447,6 +1710,22 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
     g.moveTo(s * 0.97, s / 2); g.lineTo(s * 0.4, s * 0.39); g.lineTo(s * 0.06, s / 2); g.lineTo(s * 0.4, s * 0.61);
     g.closePath(); g.fill();
   })];
+  // A playing card or scrap of paper: light, with a darker inner frame (so it takes a tint).
+  out.card = [canvasTexture(64, (g, s) => {
+    g.fillStyle = "#ffffff";
+    g.beginPath(); g.roundRect(s * 0.28, s * 0.12, s * 0.44, s * 0.76, s * 0.06); g.fill();
+    g.strokeStyle = "rgba(0,0,0,0.35)"; g.lineWidth = s * 0.03;
+    g.beginPath(); g.roundRect(s * 0.34, s * 0.19, s * 0.32, s * 0.62, s * 0.03); g.stroke();
+  })];
+  // A coin, lit from the top left, with a raised rim.
+  out.coin = [canvasTexture(64, (g, s) => {
+    const r = g.createRadialGradient(s * 0.4, s * 0.38, s * 0.03, s / 2, s / 2, s * 0.41);
+    r.addColorStop(0, "#ffffff"); r.addColorStop(0.7, "#c8c8c8"); r.addColorStop(1, "#8a8a8a");
+    g.fillStyle = r;
+    g.beginPath(); g.arc(s / 2, s / 2, s * 0.41, 0, TAU); g.fill();
+    g.strokeStyle = "rgba(60,60,60,0.6)"; g.lineWidth = s * 0.05;
+    g.beginPath(); g.arc(s / 2, s / 2, s * 0.3, 0, TAU); g.stroke();
+  })];
   // Stones: irregular, lit from the top left (light grey, so they take a tint).
   out.rock = [0, 1, 2].map(v => canvasTexture(64, (g, s) => {
     let seed = 17 + v * 31;
@@ -1474,7 +1753,7 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /** Emitter sprites are drawn at size * EMIT_SCALE token radii across (soft textures need room to fade). */
-const EMIT_SCALE = { glow: 4, sparkle: 4, smoke: 2.4, shard: 2.6, leaf: 2.6, petal: 2.6, rock: 2.6, bubble: 2.6 };
+const EMIT_SCALE = { glow: 4, sparkle: 4, smoke: 2.4, shard: 2.6, leaf: 2.6, petal: 2.6, rock: 2.6, bubble: 2.6, card: 2.6, coin: 2.6, note: 2.6 };
 const EMIT_MAX = 600;          // most live particles in one emitter
 const EMIT_WARMUP = 150;       // 1/60 s steps simulated up front, so a new ring starts alive
 const ROLES = { bright: 0, main: 1, dark: 2 };
