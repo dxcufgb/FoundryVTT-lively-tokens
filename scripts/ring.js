@@ -530,15 +530,46 @@ vec4 ring(vec2 p, float r, float a, float t) {
 /*  Designs and styles                                                      */
 /* ======================================================================== */
 /*
- * band:   which shader draws the ring       blend: "normal" | "add"
+ * band:   which shader draws the ring (optional: effects-only designs have none)
+ * blend:  "normal" | "add"
  * colors: [bright, main, dark] for the band  p1:    style parameter (glow)
  * swarms: sprite groups, see class Swarm
  *   tex    texture name     count   sprites at size 1 (scales with creature size)
- *   mode   orbit | inward | rise | wander | flutter | puff
+ *   mode   orbit | inward | rise | wander | flutter | puff | emit (see below)
  *   radius [min, max] in token radii      size [min, max] in token radii
  *   speed  angular speed (rad/s)          colors  list of hex colours
  *   blend  add | normal                   alpha   max opacity    spin  rad/s
+ *
+ * mode "emit" is a particle emitter: sprites are born, move and die, instead of a fixed count looping.
+ * Everything is in token radii and seconds:
+ *   rate    particles born per second (times density, detail and creature size)
+ *   life    [min, max] seconds a particle lives
+ *   radius  [min, max] distance from the centre where it is born (0.9 - 1.25 hugs the edge)
+ *   size    [start, end] diameter as a factor of the texture (see EMIT_SCALE); end > start grows
+ *   out     [min, max] outward speed (negative: drawn inward)
+ *   swirl   sideways speed around the token     wobble  random sideways meander
+ *   group   born at this many points that turn at `lead` rad/s; with a low swirl they leave tails
+ *   spin    sprite rotation speed               flicker 0 - 1 twinkle
+ *   colors  ramp over the particle's life: [[t, colour, alpha], ...]; colour is "bright", "main",
+ *           "dark" (the style's palette, so a custom colour recolours it) or a hex colour
  */
+
+/** Colour ramps for emitters, in terms of the style's palette. */
+const RAMP = {
+  hot: (a = 1) => [[0, "#ffffff", 0], [0.06, "bright", a], [0.45, "main", a * 0.85], [1, "dark", 0]],
+  glow: (a = 1) => [[0, "bright", 0], [0.15, "bright", a], [0.6, "main", a * 0.7], [1, "main", 0]],
+  main: (a = 1) => [[0, "main", 0], [0.2, "main", a], [1, "dark", 0]],
+  bright: (a = 1) => [[0, "bright", 0], [0.2, "bright", a], [0.7, "main", a * 0.6], [1, "main", 0]],
+  shade: (a, mid = a * 0.6) => [[0, "dark", 0], [0.3, "dark", a], [0.75, "dark", mid], [1, "dark", 0]],
+  leaf: (a = 0.95) => [[0, "main", 0], [0.12, "main", a], [0.7, "dark", a * 0.85], [1, "dark", 0]],
+  mixed: (a = 1) => [[0, "dark", 0], [0.15, "dark", a], [0.6, "main", a * 0.7], [1, "main", 0]]
+};
+
+/** Styles of an effects-only design: every style shares the same emitters, only the palette differs. */
+function emitStyles(swarms, styles) {
+  return Object.fromEntries(Object.entries(styles).map(([id, [label, ...colors]]) => [id, { label, colors, swarms }]));
+}
+
 export const DESIGNS = {
   druid: {
     label: "Druid", icon: "fa-solid fa-leaf", band: "druid", blend: "normal",
@@ -805,6 +836,187 @@ export const DESIGNS = {
       spectral: { label: "Spectral", blend: "add", colors: ["#e0f8ff", "#5ac8ff", "#0a2a4a"], p1: 0,
         swarms: [{ tex: "glow", count: 10, mode: "orbit", radius: [1.12, 1.24], size: [0.04, 0.07], speed: 0.55, colors: ["#bff0ff"], blend: "add", alpha: 0.8 }] }
     }
+  },
+
+  rage: {
+    label: "Rage Embers", icon: "fa-solid fa-fire-flame-curved", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 6, life: [1.5, 2.5], radius: [0.95, 1.1], size: [0.15, 0.5], out: [0.08, 0.18], swirl: 0.1, colors: RAMP.shade(0.45) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 30, life: [0.8, 1.6], radius: [0.9, 1.15], size: [0.07, 0.015], out: [0.15, 0.45], swirl: 0.05, wobble: 0.15, flicker: 0.4, colors: RAMP.hot() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 6, life: [0.2, 0.4], radius: [0.95, 1.1], size: [0.1, 0.02], out: [0.4, 0.8], colors: RAMP.hot() }
+    ], {
+      berserker: ["Berserker", "#ffe0a0", "#ff3a14", "#4a0402"],
+      wildheart: ["Wild Heart", "#fff0b8", "#e8902a", "#3a1a06"],
+      worldtree: ["World Tree", "#e8ffd0", "#5ac83a", "#0a2a06"],
+      zealot: ["Zealot", "#ffffff", "#ffd04a", "#5a2a00"]
+    })
+  },
+
+  encore: {
+    label: "Encore", icon: "fa-solid fa-guitar", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 70, group: 3, lead: 1.6, swirl: 0.1, wobble: 0.35, life: [0.5, 1.0], radius: [1.15, 1.25], size: [0.055, 0.01], out: [0, 0.02], colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 30, group: 2, lead: -1.1, swirl: -0.08, life: [0.4, 0.8], radius: [1.38, 1.42], size: [0.035, 0.01], out: [0, 0], colors: RAMP.bright(0.8) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 8, life: [1, 2], radius: [1.05, 1.4], size: [0.08, 0.01], out: [0.05, 0.15], flicker: 0.7, spin: 1.5, colors: RAMP.glow() }
+    ], {
+      lore: ["Lore", "#fff8d0", "#ffc84a", "#4a3000"],
+      valor: ["Valor", "#ffe8d0", "#ff5a3a", "#4a0a0a"],
+      glamour: ["Glamour", "#fff0f6", "#ff7ab8", "#4a0a2a"],
+      eloquence: ["Eloquence", "#f0fbff", "#4ab8ff", "#0a2a4a"]
+    })
+  },
+
+  radiance: {
+    label: "Radiance", icon: "fa-solid fa-hands-praying", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 18, life: [1.5, 2.5], radius: [0.95, 1.1], size: [0.1, 0.25], out: [0.05, 0.12], colors: RAMP.main(0.22) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 36, group: 6, lead: 0.35, swirl: 0, life: [0.6, 1.0], radius: [1.28, 1.3], size: [0.05, 0], out: [0, 0], colors: RAMP.glow() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 12, life: [1, 2], radius: [0.9, 1.3], size: [0.09, 0.015], out: [0.05, 0.15], flicker: 0.6, spin: 1, colors: RAMP.glow() }
+    ], {
+      light: ["Light", "#ffffff", "#ffd85a", "#6a4400"],
+      life: ["Life", "#ffffff", "#ffe0b8", "#a85a2a"],
+      tempest: ["Tempest", "#ffffff", "#7ac8ff", "#0a2a6a"],
+      grave: ["Grave", "#f0e8ff", "#a890d0", "#1a1428"]
+    })
+  },
+
+  wildbloom: {
+    label: "Wild Bloom", icon: "fa-solid fa-tree", blend: "add",
+    styles: emitStyles([
+      { tex: "leaf", mode: "emit", blend: "normal", rate: 9, life: [2.5, 4], radius: [0.95, 1.15], size: [0.12, 0.1], out: [0.06, 0.14], swirl: 0.18, wobble: 0.2, spin: 1.2, colors: RAMP.leaf() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 18, life: [2.5, 4.5], radius: [0.95, 1.3], size: [0.06, 0.025], out: [0.03, 0.1], wobble: 0.25, flicker: 0.5, colors: RAMP.bright() }
+    ], {
+      land: ["Land", "#e8ffb0", "#5ab83a", "#2a3a10"],
+      moon: ["Moon", "#e8f4ff", "#8ab8d8", "#1a2a3a"],
+      spores: ["Spores", "#f0ffa0", "#a8a050", "#2a1a10"],
+      stars: ["Stars", "#ffffff", "#7ab0ff", "#141a40"]
+    })
+  },
+
+  steelsparks: {
+    label: "Steel Sparks", icon: "fa-solid fa-shield", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 160, group: 2, lead: 3.0, swirl: 0.2, life: [0.15, 0.32], radius: [1.17, 1.22], size: [0.08, 0.025], out: [0, 0], colors: RAMP.glow(0.9) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 40, group: 2, lead: 3.0, swirl: 0.6, life: [0.2, 0.45], radius: [1.15, 1.25], size: [0.08, 0.01], out: [0.4, 0.9], colors: RAMP.hot() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 3, life: [0.4, 0.8], radius: [1.0, 1.3], size: [0.1, 0.02], out: [0, 0.05], flicker: 0.8, colors: RAMP.glow() }
+    ], {
+      champion: ["Champion", "#ffffff", "#c8d4e0", "#3a4450"],
+      battlemaster: ["Battle Master", "#fff4d0", "#e8b04a", "#4a2a08"],
+      eldritch: ["Eldritch Knight", "#e8f0ff", "#5a8aff", "#10204a"],
+      psi: ["Psi Warrior", "#ffe8ff", "#e05ad8", "#3a0a3a"]
+    })
+  },
+
+  kiflow: {
+    label: "Ki Flow", icon: "fa-solid fa-yin-yang", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "add", rate: 5, life: [2, 3], radius: [1.0, 1.15], size: [0.2, 0.45], out: [0.02, 0.06], swirl: 0.3, colors: RAMP.main(0.12) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 14, life: [1.2, 1.8], radius: [1.5, 1.7], size: [0.03, 0.06], out: [-0.25, -0.15], swirl: 0.3, colors: RAMP.bright(0.9) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 80, group: 2, lead: 1.4, swirl: 0.12, life: [0.6, 1.0], radius: [1.12, 1.16], size: [0.07, 0.02], out: [0, 0], colors: RAMP.glow() }
+    ], {
+      openhand: ["Open Hand", "#ffffff", "#ffd89a", "#6a3a0a"],
+      shadow: ["Shadow", "#d8d0ff", "#6a5aa8", "#08060f"],
+      elements: ["Elements", "#fff0d0", "#ff7a3a", "#0a4a8a"],
+      mercy: ["Mercy", "#e8fff4", "#4ad8b0", "#0a3a30"]
+    })
+  },
+
+  holyaura: {
+    label: "Holy Aura", icon: "fa-solid fa-hand-sparkles", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 22, life: [1.0, 1.6], radius: [1.0, 1.1], size: [0.12, 0.3], out: [0.15, 0.3], colors: RAMP.main(0.2) },
+      { tex: "shard", mode: "emit", blend: "add", rate: 5, life: [1.0, 1.6], radius: [1.0, 1.1], size: [0.13, 0.05], out: [0.1, 0.2], colors: RAMP.glow() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 9, life: [0.8, 1.6], radius: [0.95, 1.3], size: [0.08, 0.015], out: [0.04, 0.12], flicker: 0.6, colors: RAMP.glow() }
+    ], {
+      devotion: ["Devotion", "#ffffff", "#ffe07a", "#6a4a00"],
+      vengeance: ["Vengeance", "#ffe0d0", "#d82a1a", "#2a0202"],
+      ancients: ["Ancients", "#f0ffd8", "#7ad84a", "#1a3a08"],
+      glory: ["Glory", "#fff8ff", "#ffb04a", "#6a1a4a"]
+    })
+  },
+
+  huntertrail: {
+    label: "Hunter's Trail", icon: "fa-solid fa-paw", blend: "add",
+    styles: emitStyles([
+      { tex: "leaf", mode: "emit", blend: "normal", rate: 4, life: [2.5, 3.5], radius: [1.0, 1.2], size: [0.1, 0.08], out: [0.06, 0.12], swirl: 0.25, wobble: 0.2, spin: 1.5, colors: RAMP.leaf(0.8) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 12, life: [2.5, 4], radius: [1.05, 1.5], size: [0.055, 0.025], out: [0, 0.05], wobble: 0.3, flicker: 0.6, colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 90, group: 1, lead: 1.8, swirl: 0.1, life: [0.4, 0.8], radius: [1.27, 1.3], size: [0.09, 0], out: [0, 0], colors: RAMP.glow() }
+    ], {
+      hunter: ["Hunter", "#fff4c8", "#d8b04a", "#3a2a10"],
+      gloomstalker: ["Gloom Stalker", "#e0d0ff", "#7a5ad8", "#0a0614"],
+      beastmaster: ["Beast Master", "#ffe8c0", "#d8803a", "#3a1a08"],
+      feywanderer: ["Fey Wanderer", "#fff0ff", "#ff8ae0", "#2a0a3a"]
+    })
+  },
+
+  shadowstep: {
+    label: "Shadow Step", icon: "fa-solid fa-mask", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 16, life: [1.6, 2.6], radius: [0.9, 1.1], size: [0.14, 0.6], out: [0.06, 0.16], swirl: 0.28, colors: RAMP.shade(0.85, 0.5) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 6, life: [1.2, 2], radius: [1.0, 1.2], size: [0.1, 0.18], out: [0.05, 0.1], swirl: 0.28, colors: RAMP.main(0.18) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 2.5, life: [0.3, 0.6], radius: [1.0, 1.35], size: [0.13, 0.02], out: [0, 0.03], flicker: 0.3, colors: RAMP.glow() }
+    ], {
+      thief: ["Thief", "#e8eef4", "#5a6470", "#0a0c10"],
+      assassin: ["Assassin", "#ffd0d0", "#c0101a", "#0a0204"],
+      trickster: ["Arcane Trickster", "#f0d8ff", "#9a4aff", "#0a0414"],
+      soulknife: ["Soulknife", "#e0ffff", "#3ad8ff", "#020a14"]
+    })
+  },
+
+  wildsurge: {
+    label: "Wild Surge", icon: "fa-solid fa-wand-sparkles", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 36, life: [0.6, 1.3], radius: [0.95, 1.1], size: [0.09, 0.025], out: [0.1, 0.45], swirl: 0.45, wobble: 0.6, flicker: 0.5, colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 30, life: [0.6, 1.3], radius: [0.95, 1.1], size: [0.08, 0.02], out: [0.1, 0.35], swirl: -0.45, wobble: 0.6, flicker: 0.5, colors: RAMP.mixed() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 10, life: [0.15, 0.35], radius: [1.0, 1.3], size: [0.1, 0.02], out: [0.3, 0.7], flicker: 0.6, spin: 4, colors: RAMP.hot() }
+    ], {
+      draconic: ["Draconic", "#fff0b0", "#ff5a1a", "#7a0a3a"],
+      wild: ["Wild Magic", "#ffffff", "#ff4ad8", "#2ad8ff"],
+      aberrant: ["Aberrant", "#e8ffd0", "#8adf3a", "#5a1a8a"],
+      clockwork: ["Clockwork", "#ffffff", "#ffd86a", "#3a8aba"]
+    })
+  },
+
+  eldritch: {
+    label: "Eldritch Pact", icon: "fa-solid fa-eye", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 12, life: [1.4, 2.0], radius: [1.55, 1.75], size: [0.55, 0.3], out: [-0.28, -0.18], swirl: 0.35, colors: RAMP.shade(0.55, 0.45) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 8, life: [1.2, 1.8], radius: [1.5, 1.7], size: [0.025, 0.05], out: [-0.3, -0.2], swirl: 0.35, colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 75, group: 3, lead: -0.9, swirl: -0.05, life: [0.5, 0.9], radius: [1.22, 1.26], size: [0.06, 0], out: [0, 0], colors: RAMP.glow() }
+    ], {
+      fiend: ["Fiend", "#ffd0a0", "#ff3a0a", "#1a0202"],
+      archfey: ["Archfey", "#f0ffe8", "#ff7ad8", "#0a1a2a"],
+      greatoldone: ["Great Old One", "#e0ffd0", "#5aff7a", "#0a0418"],
+      celestial: ["Celestial", "#ffffff", "#ffe8a0", "#2a2a5a"]
+    })
+  },
+
+  spellweave: {
+    label: "Spellweave", icon: "fa-solid fa-book-open", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 90, group: 4, lead: 2.4, swirl: 0.15, life: [0.45, 0.8], radius: [1.18, 1.22], size: [0.06, 0.01], out: [0, 0], colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 40, group: 3, lead: -1.2, swirl: -0.05, life: [0.4, 0.7], radius: [1.45, 1.48], size: [0.035, 0], out: [0, 0], colors: RAMP.bright(0.75) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 8, life: [1, 1.8], radius: [1.0, 1.4], size: [0.07, 0.01], out: [0.03, 0.1], flicker: 0.65, colors: RAMP.glow() }
+    ], {
+      evocation: ["Evocation", "#fff0c8", "#ff8a2a", "#4a0a00"],
+      abjuration: ["Abjuration", "#e8f8ff", "#3a9aff", "#0a1a4a"],
+      divination: ["Divination", "#ffffff", "#e8d07a", "#2a2050"],
+      necromancy: ["Necromancy", "#e0ffe8", "#5adf9a", "#0a1a14"]
+    })
+  },
+
+  arcforge: {
+    label: "Arc Forge", icon: "fa-solid fa-screwdriver-wrench", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 4, life: [1.5, 2.5], radius: [1.0, 1.15], size: [0.12, 0.45], out: [0.08, 0.16], swirl: 0.15, colors: [[0, "#d8dce0", 0], [0.2, "#d8dce0", 0.22], [1, "#d8dce0", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 30, life: [0.1, 0.28], radius: [1.0, 1.12], size: [0.1, 0.015], out: [0.6, 1.2], flicker: 0.8, spin: 6, colors: RAMP.hot() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 60, group: 3, lead: 1.0, swirl: 0, life: [0.5, 0.8], radius: [1.3, 1.32], size: [0.08, 0.01], out: [0, 0], colors: RAMP.glow() }
+    ], {
+      alchemist: ["Alchemist", "#e8ffd0", "#7adf3a", "#2a3a10"],
+      artillerist: ["Artillerist", "#ffe8c0", "#ff8a2a", "#3a1a08"],
+      battlesmith: ["Battle Smith", "#ffffff", "#9ad8ff", "#1a3a5a"],
+      armorer: ["Armorer", "#fff4d0", "#e8b84a", "#3a2a10"]
+    })
   }
 };
 
@@ -1057,6 +1269,15 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
     g.bezierCurveTo(s * 0.26, -s * 0.5, s * 0.56, -s * 0.02, 0, s * 0.36);
     g.fill();
   })];
+  // A crystal shard / ray of light pointing along +x (emitters turn it to face outward).
+  out.shard = [canvasTexture(64, (g, s) => {
+    const l = g.createLinearGradient(s * 0.06, 0, s * 0.97, 0);
+    l.addColorStop(0, "rgba(255,255,255,0.3)"); l.addColorStop(1, "rgba(255,255,255,1)");
+    g.fillStyle = l;
+    g.beginPath();
+    g.moveTo(s * 0.97, s / 2); g.lineTo(s * 0.4, s * 0.39); g.lineTo(s * 0.06, s / 2); g.lineTo(s * 0.4, s * 0.61);
+    g.closePath(); g.fill();
+  })];
   // Stones: irregular, lit from the top left (light grey, so they take a tint).
   out.rock = [0, 1, 2].map(v => canvasTexture(64, (g, s) => {
     let seed = 17 + v * 31;
@@ -1083,13 +1304,29 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
+/** Emitter sprites are drawn at size * EMIT_SCALE token radii across (soft textures need room to fade). */
+const EMIT_SCALE = { glow: 4, sparkle: 4, smoke: 2.4, shard: 2.6, leaf: 2.6 };
+const EMIT_MAX = 600;          // most live particles in one emitter
+const EMIT_WARMUP = 150;       // 1/60 s steps simulated up front, so a new ring starts alive
+const ROLES = { bright: 0, main: 1, dark: 2 };
+const rgbToInt = c => (Math.round(c[0] * 255) << 16) | (Math.round(c[1] * 255) << 8) | Math.round(c[2] * 255);
+
 class Swarm extends PIXI.Container {
-  constructor(def, textures, colors, count) {
+  /**
+   * @param {object} emit  for mode "emit": {rate, palette} (particles per second after density/detail,
+   *                       the [bright, main, dark] rgb palette the colour ramp refers to, and the
+   *                       layer's current time t, so group points line up with later frames)
+   */
+  constructor(def, textures, colors, count, emit = null) {
     super();
     this.def = def;
     let variants = def.textures ?? textures[def.tex] ?? textures.glow ?? [PIXI.Texture.WHITE];
     if (def.frames) variants = variants.slice(0, def.frames);
     this.items = [];
+    if (def.mode === "emit") {
+      this.#initEmitter(variants, count, emit);
+      return;
+    }
     for (let i = 0; i < count; i++) {
       const s = new PIXI.Sprite(variants[i % variants.length]);
       s.anchor.set(0.5);
@@ -1113,9 +1350,110 @@ class Swarm extends PIXI.Container {
     p.dir = Math.random() < 0.5 ? -1 : 1;
   }
 
+  /* ---------- mode "emit" ---------- */
+
+  #initEmitter(variants, count, emit) {
+    const d = this.def;
+    this.rate = emit?.rate ?? 0;
+    this.carry = 0;
+    const t0 = emit?.t ?? 0;
+    this.time = t0 - EMIT_WARMUP / 60;
+    const pal = emit?.palette ?? [[1, 1, 1], [1, 1, 1], [1, 1, 1]];
+    this.ramp = d.colors.map(([t, c, a]) => [t, c in ROLES ? pal[ROLES[c]] : hexToRgb(c), a]);
+    this.free = [];
+    for (let i = 0; i < count; i++) {
+      const s = new PIXI.Sprite(variants[i % variants.length]);
+      s.anchor.set(0.5);
+      s.blendMode = d.blend === "normal" ? PIXI.BLEND_MODES.NORMAL : PIXI.BLEND_MODES.ADD;
+      s.visible = false;
+      const p = { sprite: s, alive: false };
+      this.items.push(p);
+      this.free.push(p);
+      this.addChild(s);
+    }
+    for (let i = 1; i <= EMIT_WARMUP; i++) this.#step(t0 - (EMIT_WARMUP - i) / 60, 1 / 60);
+  }
+
+  /** Colour and alpha of the ramp at t (0 - 1). */
+  #rampAt(t) {
+    const r = this.ramp;
+    let i = 1;
+    while (i < r.length - 1 && r[i][0] < t) i++;
+    const [t0, c0, a0] = r[i - 1], [t1, c1, a1] = r[i];
+    const k = Math.min(1, Math.max(0, (t - t0) / ((t1 - t0) || 1)));
+    return [mixRgb(c0, c1, k), a0 + (a1 - a0) * k];
+  }
+
+  /** Move a particle on by dt seconds (positions in token radii, polar). */
+  #move(p, dt) {
+    const d = this.def;
+    p.age += dt;
+    p.r = Math.max(0.05, p.r + p.v * dt);
+    p.angle += ((d.swirl ?? 0) + (d.wobble ?? 0) * Math.sin(p.age * 1.7 + p.phase)) * dt / p.r;
+    p.rot += (d.spin ?? 0) * p.dir * dt;
+  }
+
+  /** Move and retire particles, then spawn this frame's new ones. */
+  #step(t, dt) {
+    const d = this.def;
+    this.time = t;
+    for (const p of this.items) {
+      if (!p.alive) continue;
+      if (p.age + dt >= p.lifespan) {
+        p.alive = false;
+        p.sprite.visible = false;
+        this.free.push(p);
+        continue;
+      }
+      this.#move(p, dt);
+    }
+    this.carry += this.rate * dt;
+    while (this.carry >= 1) {
+      this.carry -= 1;
+      const p = this.free.pop();
+      if (!p) { this.carry = 0; break; }
+      // Births are spread over the frame, so tails stay smooth when the frame rate drops.
+      const ago = this.rate > 0 ? Math.min(dt, this.carry / this.rate) : 0;
+      p.alive = true;
+      p.angle = d.group
+        ? (t - ago) * (d.lead ?? 0) + Math.floor(Math.random() * d.group) * TAU / d.group + rand(-0.03, 0.03)
+        : Math.random() * TAU;
+      p.r = rand(d.radius[0], d.radius[1]);
+      p.v = rand(d.out?.[0] ?? 0, d.out?.[1] ?? 0);
+      p.age = 0;
+      p.lifespan = rand(d.life[0], d.life[1]);
+      p.phase = Math.random() * TAU;
+      p.rot = Math.random() * TAU;
+      p.dir = Math.random() < 0.5 ? -1 : 1;
+      this.#move(p, ago);
+    }
+  }
+
+  #updateEmitter(t, dt, R) {
+    const d = this.def, A = d.alpha ?? 1;
+    this.#step(t, dt);
+    const k = EMIT_SCALE[d.tex] ?? 3;
+    for (const p of this.items) {
+      if (!p.alive) continue;
+      const s = p.sprite;
+      const life = p.age / p.lifespan;
+      let [rgb, alpha] = this.#rampAt(life);
+      if (d.flicker) alpha *= 1 - d.flicker * (0.5 + 0.5 * Math.sin(p.age * 17 + p.phase * 9));
+      const px = (d.size[0] + (d.size[1] - d.size[0]) * life) * R * k;
+      if (alpha <= 0.01 || px < 0.6) { s.visible = false; continue; }
+      s.visible = true;
+      s.position.set(Math.cos(p.angle) * p.r * R, Math.sin(p.angle) * p.r * R);
+      s.rotation = d.tex === "shard" ? p.angle : p.rot;
+      s.scale.set(px / (s.texture.orig?.width || s.texture.width || 64));
+      s.tint = rgbToInt(rgb);
+      s.alpha = Math.min(1, alpha * A);
+    }
+  }
+
   /** t: seconds (already scaled by speed), dt: frame seconds (scaled), R: ring radius in px */
   update(t, dt, R) {
     const d = this.def, A = d.alpha ?? 1;
+    if (d.mode === "emit") return this.#updateEmitter(t, dt, R);
     const minPx = 3;
     for (const p of this.items) {
       const s = p.sprite;
@@ -1288,15 +1626,18 @@ class LivelyLayer extends PIXI.Container {
     if (!this.isCustom) {
       const design = DESIGNS[cfg.design];
       const style = design.styles[cfg.style];
-      const [A, B, C] = palette(style, cfg.color);
-      const material = new PIXI.MeshMaterial(PIXI.Texture.WHITE, {
-        program: program(design.band),
-        uniforms: { uTime: 0, uA: new Float32Array(A), uB: new Float32Array(B), uC: new Float32Array(C), uP1: style.p1 ?? 0 }
-      });
-      this.band = new PIXI.Mesh(quadGeometry(), material);
-      this.band.blendMode = (style.blend ?? design.blend) === "add" ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
-      this.addChild(this.band);
+      this.palette = palette(style, cfg.color);
+      const [A, B, C] = this.palette;
       this.additive = (style.blend ?? design.blend) === "add";
+      if (design.band) {
+        const material = new PIXI.MeshMaterial(PIXI.Texture.WHITE, {
+          program: program(design.band),
+          uniforms: { uTime: 0, uA: new Float32Array(A), uB: new Float32Array(B), uC: new Float32Array(C), uP1: style.p1 ?? 0 }
+        });
+        this.band = new PIXI.Mesh(quadGeometry(), material);
+        this.band.blendMode = this.additive ? PIXI.BLEND_MODES.ADD : PIXI.BLEND_MODES.NORMAL;
+        this.addChild(this.band);
+      }
     } else {
       this.additive = cfg.blend === "add";
     }
@@ -1327,6 +1668,14 @@ class LivelyLayer extends PIXI.Container {
     const sizeFactor = sizeFactorOf(this.R);
     const colorOverride = this.isCustom ? null : this.cfg.color;
     for (const def of this.#defs()) {
+      if (def.mode === "emit") {
+        const rate = this.cfg.density <= 0 ? 0 : def.rate * this.cfg.density * this.quality * sizeFactor;
+        const n = rate > 0 ? Math.min(EMIT_MAX, Math.ceil(rate * def.life[1]) + 8) : 0;
+        const sw = new Swarm(def, this.textures, null, n, { rate, palette: this.palette, t: this.time });
+        this.swarms.push(sw);
+        this.addChild(sw);
+        continue;
+      }
       let n;
       if (def.mode === "spinner") n = 1;
       else if (def.custom) n = Math.max(1, Math.round(def.count * this.quality * sizeFactor));
