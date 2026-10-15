@@ -38,6 +38,7 @@ function designGroups(current) {
 const PREVIEW = 320;   // preview canvas size in px
 
 const escapeHTML = str => String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const docOf = t => t?.document ?? t;     // a Token -> its TokenDocument
 
 /** How a slider's value is shown next to it. */
 const FORMAT = {
@@ -97,8 +98,8 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       return null;
     }
     if (actor && !actor.isOwner) return null;
-    token = token?.object ?? token;               // a TokenDocument -> its Token
-    if (token && !token.document?.isOwner) token = null;
+    token = token?.object ?? token;               // a TokenDocument -> its Token (kept as a document when off the canvas)
+    if (token && !docOf(token)?.isOwner) token = null;
     // Every open starts from the ring of whatever it was opened for, never from what was left in the window.
     if (this.instance) this.instance.setSubject({ actor, token });
     else this.instance = new this({ actor, token });
@@ -140,15 +141,21 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     if (this.actor) return actorTokens(this.actor);
     const selected = (canvas?.tokens?.controlled ?? []).filter(t => t.document?.isOwner);
     const token = this.token;
-    if (!token || token.destroyed || !token.document?.isOwner) return selected;
-    return [token, ...selected.filter(t => t !== token)];
+    const doc = docOf(token);
+    if (!doc || token.destroyed || !doc.isOwner) return selected;
+    return [token, ...selected.filter(t => t.document !== doc)];
   }
 
-  /** The token (or actor) whose ring the editor shows: the one the window was opened for. */
+  /**
+   * The ring the editor shows: the one saved on what the window was opened for. An actor's is on
+   * its prototype token (a token's own actor: on that token); a token's is on the token itself.
+   */
   #subjectRing() {
-    const token = this.#targets()[0];
-    if (token) return tokenRing(token) ?? prototypeRing(token.actor);
-    return this.actor ? prototypeRing(this.actor) : null;
+    if (this.actor) {
+      if (this.actor.isToken) return tokenRing(this.actor.token);
+      return prototypeRing(this.actor) ?? tokenRing(this.#targets()[0]);
+    }
+    return tokenRing(this.#targets()[0]);
   }
 
   /**
@@ -369,7 +376,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
 
   async #updatePreviewToken() {
     const token = this.#targets()[0] ?? (this.actor ? null : canvas?.tokens?.controlled?.[0]);
-    const src = token?.document?.texture?.src
+    const src = docOf(token)?.texture?.src
       ?? baseActor(this.actor)?.prototypeToken?.texture?.src ?? this.actor?.img ?? CONST.DEFAULT_TOKEN;
     if (src === this.previewSrc && this.previewToken) return;
     this.previewSrc = src;
