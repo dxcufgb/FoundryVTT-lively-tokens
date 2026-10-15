@@ -1,6 +1,6 @@
 # Dxcufgb's lively tokens
 
-Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
 
@@ -14,7 +14,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ## Features
 
-- **19 ring designs, each with several styles:**
+- **32 ring designs, each with several styles:**
 
   | Design | Styles |
   | --- | --- |
@@ -37,6 +37,21 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   | Necrotic | Necrotic, Shadow, Blood, Bone |
   | Orbiting Stones | Granite, Sandstone, Obsidian, Jade |
   | Knives | Steel, Assassin, Gilded, Spectral |
+  | Rage Embers (Barbarian) | Berserker, Wild Heart, World Tree, Zealot |
+  | Encore (Bard) | Lore, Valor, Glamour, Eloquence |
+  | Radiance (Cleric) | Light, Life, Tempest, Grave |
+  | Wild Bloom (Druid) | Land, Moon, Spores, Stars |
+  | Steel Sparks (Fighter) | Champion, Battle Master, Eldritch Knight, Psi Warrior |
+  | Ki Flow (Monk) | Open Hand, Shadow, Elements, Mercy |
+  | Holy Aura (Paladin) | Devotion, Vengeance, Ancients, Glory |
+  | Hunter's Trail (Ranger) | Hunter, Gloom Stalker, Beast Master, Fey Wanderer |
+  | Shadow Step (Rogue) | Thief, Assassin, Arcane Trickster, Soulknife |
+  | Wild Surge (Sorcerer) | Draconic, Wild Magic, Aberrant, Clockwork |
+  | Eldritch Pact (Warlock) | Fiend, Archfey, Great Old One, Celestial |
+  | Spellweave (Wizard) | Evocation, Abjuration, Divination, Necromancy |
+  | Arc Forge (Artificer) | Alchemist, Artillerist, Battle Smith, Armorer |
+
+  The designs marked with a D&D class are particle effects only (no ring band), one per 5e class, with styles named after its subclasses.
 
 - **Layers: combine effects into one ring.** Stack up to 20 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
 - **Your own image as an effect.** Pick *Your image*, then **Browse** to an image or **Upload** a PNG (it goes into `worlds/<your world>/dxcufgbs-lively-tokens/`). Choose how it moves (centred, turning, circling, drifting, rising, fluttering, puffs, swirling in), its size and how many, and its colour:
