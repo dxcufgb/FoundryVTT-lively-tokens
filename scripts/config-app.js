@@ -8,7 +8,7 @@
  */
 
 import {
-  DESIGNS, CUSTOM, MOTIONS, MAX_LAYERS, normalizeConfig, normalizeLayer, layerLabel, LivelyRing
+  DESIGNS, DESIGN_CATEGORIES, CUSTOM, MOTIONS, MAX_LAYERS, normalizeConfig, normalizeLayer, layerLabel, LivelyRing
 } from "./ring.js";
 import { MODULE_ID } from "./constants.js";
 import {
@@ -18,6 +18,22 @@ import {
 import { exportRing, importRing } from "./transfer.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+/**
+ * The design dropdown: one group per category ("--Classes--", ...), general designs first and the
+ * user's own image last. Each option is {id, label, selected}.
+ */
+function designGroups(current) {
+  const listed = new Set(Object.values(DESIGN_CATEGORIES).flatMap(([, ids]) => ids));
+  const option = id => ({ id, label: DESIGNS[id].label, selected: id === current });
+  const group = (key, ids) => ({ label: `--${game.i18n.localize(key)}--`, options: ids.filter(id => DESIGNS[id]).map(option) });
+  return [
+    group("DXLT.Category.General", Object.keys(DESIGNS).filter(id => !listed.has(id))),
+    ...Object.values(DESIGN_CATEGORIES).map(([key, ids]) => group(key, ids)),
+    { label: `--${game.i18n.localize("DXLT.Category.Custom")}--`,
+      options: [{ id: CUSTOM, label: game.i18n.localize("DXLT.App.CustomImage"), selected: current === CUSTOM }] }
+  ].filter(g => g.options.length);
+}
 
 const PREVIEW = 320;   // preview canvas size in px
 
@@ -40,7 +56,6 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     window: { title: "DXLT.App.Title", icon: "fa-solid fa-ring", resizable: false },
     position: { width: 880, height: "auto" },
     actions: {
-      design: LivelyTokensConfig.#onDesign,
       style: LivelyTokensConfig.#onStyle,
       selectLayer: LivelyTokensConfig.#onSelectLayer,
       addLayer: LivelyTokensConfig.#onAddLayer,
@@ -173,10 +188,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       canMoveUp: this.sel < this.cfg.layers.length - 1,
       maxLayers: MAX_LAYERS,
 
-      designs: [
-        ...Object.entries(DESIGNS).map(([id, d]) => ({ id, label: d.label, icon: d.icon, active: id === layer.design })),
-        { id: CUSTOM, label: game.i18n.localize("DXLT.App.CustomImage"), icon: "fa-solid fa-image", active: isCustom, custom: true }
-      ],
+      designGroups: designGroups(layer.design),
       isCustom,
       styles: design ? Object.entries(design.styles).map(([id, s]) => ({ id, label: s.label, active: id === layer.style })) : [],
       designLabel: design?.label ?? "",
@@ -257,6 +269,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       color?.addEventListener("input", ev => { layer().color = ev.currentTarget.value; this.#rebuildPreview(); });
     }
 
+    html.querySelector("select[name=design]")?.addEventListener("change", ev => this.#setDesign(ev.currentTarget.value));
     html.querySelector("select[name=motion]")?.addEventListener("change", ev => {
       const m = MOTIONS[ev.currentTarget.value];
       if (!m) return;
@@ -439,8 +452,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   /*  Actions                                     */
   /* -------------------------------------------- */
 
-  static #onDesign(event, target) {
-    const id = target.dataset.design;
+  #setDesign(id) {
     const old = this.layer;
     if (id === old.design || (id !== CUSTOM && !DESIGNS[id])) return;
     // Keep the fine-tuning and effects, change what is drawn.

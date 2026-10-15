@@ -60,11 +60,13 @@
 
       <h3>{{localize "DXLT.App.Design"}}</h3>
       <div class="dxlt-designs">
-        {{#each designs}}
-        <button type="button" data-action="design" data-design="{{id}}" class="{{#if active}}active{{/if}} {{#if custom}}custom{{/if}}" data-tooltip="{{label}}">
-          <i class="{{icon}}"></i><span>{{label}}</span>
-        </button>
-        {{/each}}
+        <select name="design">
+          {{#each designGroups}}
+          <optgroup label="{{label}}">
+            {{#each options}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
+          </optgroup>
+          {{/each}}
+        </select>
       </div>
 
       {{#if isCustom}}
