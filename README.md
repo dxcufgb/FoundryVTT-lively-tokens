@@ -1,6 +1,6 @@
 # Dxcufgb's lively tokens
 
-Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class and species. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
 
@@ -14,7 +14,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ## Features
 
-- **32 ring designs, each with several styles:**
+- **44 ring designs, each with several styles:**
 
   | Design | Styles |
   | --- | --- |
@@ -50,8 +50,20 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   | Eldritch Pact (Warlock) | Fiend, Archfey, Great Old One, Celestial |
   | Spellweave (Wizard) | Evocation, Abjuration, Divination, Necromancy |
   | Arc Forge (Artificer) | Alchemist, Artillerist, Battle Smith, Armorer |
+  | Celestial Plumes (Aasimar) | Radiant Soul, Radiant Consumption, Necrotic Shroud, Protector |
+  | Dragon's Breath (Dragonborn) | Red, Blue, Green, Gold |
+  | Stoneheart (Dwarf) | Mountain, Hill, Duergar, Gemcutter |
+  | Fey Grace (Elf) | High Elf, Wood Elf, Drow, Eladrin |
+  | Gnomish Fizz (Gnome) | Rock, Forest, Deep, Illusion |
+  | Giant's Stride (Goliath) | Stone, Frost, Fire, Storm |
+  | Lucky Stars (Halfling) | Lightfoot, Stout, Ghostwise, Lotusden |
+  | Heroic Inspiration (Human) | Valiant, Noble, Wanderer, Steadfast |
+  | Adrenaline Rush (Orc) | Bloodrage, Grey Tusk, Ashlands, Jade |
+  | Hellish Legacy (Tiefling) | Infernal, Abyssal, Chthonic, Zariel |
+  | Twin Heritage (Half-Elf) | Dawn, Dusk, Sylvan, Mariner |
+  | Relentless (Half-Orc) | Iron, Blood, Ash, Moss |
 
-  The designs marked with a D&D class are particle effects only (no ring band), one per 5e class, with styles named after its subclasses.
+  The designs marked with a D&D class or species are particle effects only (no ring band): one per 5e class, with styles named after its subclasses, and one per species (race) from the 2024 and 2014 rules, with styles named after its lineages, ancestries and legacies.
 
 - **Layers: combine effects into one ring.** Stack up to 20 layers, for example Swirling Flame + Hellforged Chains + Embers. Each layer has its own design, style, fine-tuning and effects; reorder, duplicate or remove them.
 - **Your own image as an effect.** Pick *Your image*, then **Browse** to an image or **Upload** a PNG (it goes into `worlds/<your world>/dxcufgbs-lively-tokens/`). Choose how it moves (centred, turning, circling, drifting, rising, fluttering, puffs, swirling in), its size and how many, and its colour:
