@@ -7,7 +7,8 @@
  * Layers are drawn bottom to top, so several effects combine into one ring. A layer with
  * design "custom" shows an image of the user's own (src) instead of a built-in design.
  * and drawn as a child of the Token placeable, so it moves, hides and sorts with the token
- * with no extra work (the same way Foundry's own combat turn marker works).
+ * with no extra work. It sits just above the token's void mesh, so it shows on top of the token
+ * art but under the bars, nameplate and status effects (see placeRing).
  *
  * API: game.modules.get("dxcufgbs-lively-tokens").api
  *   .open()                      open the Animated Border window (selected tokens)
@@ -21,7 +22,7 @@
  */
 
 import { MODULE_ID, FLAG } from "./constants.js";
-import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing } from "./ring.js";
+import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing, insertAbove } from "./ring.js";
 import { LivelyTokensConfig } from "./config-app.js";
 import { exportRing, importRing } from "./transfer.js";
 
@@ -158,18 +159,34 @@ async function syncToken(token) {
   if (token.destroyed) return;
   if (token._dxltRing && !token._dxltRing.destroyed) token._dxltRing.destroy();
   ring = new LivelyRing(cfg, tex, quality());
-  ring.zIndex = -100;                 // under the border, bars and nameplate
-  token.addChild(ring);
-  token.sortChildren?.();
   token._dxltRing = ring;
   state.tokens.add(token);
   layout(token);
   startTicker();
 }
 
+/**
+ * Put the ring on top of the token art. The token art itself is drawn in the primary canvas group,
+ * below the Token placeable, but the Token draws it once more as its void mesh with ERASE blending:
+ * whatever comes before the void mesh in the Token is cut out where the art is (that is how
+ * Foundry keeps the turn marker under the token). So the ring goes right after the void mesh, which
+ * also keeps it under the bars, nameplate and effects that follow.
+ */
+function placeRing(token, ring) {
+  const voidMesh = token.voidMesh;
+  if (voidMesh?.parent === token) {
+    ring.zIndex = voidMesh.zIndex;
+    insertAbove(token, ring, voidMesh);
+  } else if (ring.parent !== token) {
+    ring.zIndex = -100;               // no void mesh: nothing is erased, keep it under the bars and nameplate
+    token.addChildAt(ring, 0);
+  }
+}
+
 function layout(token) {
   const ring = token._dxltRing;
   if (!ring || ring.destroyed) return;
+  placeRing(token, ring);             // also after a redraw replaced the void mesh
   const w = token.w ?? token.document.width * canvas.dimensions.size;
   const h = token.h ?? token.document.height * canvas.dimensions.size;
   ring.position.set(w / 2, h / 2);

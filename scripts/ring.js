@@ -562,6 +562,7 @@ const RAMP = {
   bright: (a = 1) => [[0, "bright", 0], [0.2, "bright", a], [0.7, "main", a * 0.6], [1, "main", 0]],
   shade: (a, mid = a * 0.6) => [[0, "dark", 0], [0.3, "dark", a], [0.75, "dark", mid], [1, "dark", 0]],
   leaf: (a = 0.95) => [[0, "main", 0], [0.12, "main", a], [0.7, "dark", a * 0.85], [1, "dark", 0]],
+  dust: (a) => [[0, "main", 0], [0.2, "main", a], [1, "main", 0]],
   mixed: (a = 1) => [[0, "dark", 0], [0.15, "dark", a], [0.6, "main", a * 0.7], [1, "main", 0]]
 };
 
@@ -1017,6 +1018,174 @@ export const DESIGNS = {
       battlesmith: ["Battle Smith", "#ffffff", "#9ad8ff", "#1a3a5a"],
       armorer: ["Armorer", "#fff4d0", "#e8b84a", "#3a2a10"]
     })
+  },
+
+  celestialplumes: {
+    label: "Celestial Plumes", icon: "fa-solid fa-feather", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 14, life: [1.5, 2.5], radius: [0.95, 1.1], size: [0.1, 0.22], out: [0.04, 0.1], colors: RAMP.main(0.18) },
+      { tex: "petal", mode: "emit", blend: "normal", rate: 6, life: [2, 3.2], radius: [0.95, 1.15], size: [0.11, 0.08], out: [0.08, 0.16], swirl: 0.15, wobble: 0.15, spin: 1.0, colors: [[0, "bright", 0], [0.12, "bright", 0.95], [0.6, "main", 0.85], [1, "main", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 6, life: [1, 2], radius: [1.0, 1.35], size: [0.08, 0.015], out: [0.03, 0.08], flicker: 0.6, colors: RAMP.glow() }
+    ], {
+      radiantsoul: ["Radiant Soul", "#ffffff", "#ffe9a8", "#b08a3a"],
+      radiantconsumption: ["Radiant Consumption", "#fff4e0", "#ffb05a", "#a0400a"],
+      necroticshroud: ["Necrotic Shroud", "#e8e0f0", "#6a5a7a", "#1a1020"],
+      protector: ["Protector", "#ffffff", "#bfe0ff", "#3a6aa8"]
+    })
+  },
+
+  dragonbreath: {
+    label: "Dragon's Breath", icon: "fa-solid fa-dragon", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "add", rate: 14, group: 1, lead: 0.8, life: [0.6, 1.0], radius: [1.0, 1.05], size: [0.1, 0.45], out: [0.5, 0.9], colors: RAMP.hot(0.5) },
+      { tex: "shard", mode: "emit", blend: "normal", rate: 5, life: [1.5, 2.5], radius: [1.0, 1.2], size: [0.12, 0.09], out: [0.03, 0.08], swirl: 0.2, colors: [[0, "main", 0], [0.15, "main", 0.9], [1, "dark", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 12, life: [0.8, 1.5], radius: [0.95, 1.15], size: [0.06, 0.015], out: [0.1, 0.3], wobble: 0.2, flicker: 0.4, colors: RAMP.hot() }
+    ], {
+      red: ["Red", "#ffe8a0", "#ff4a1a", "#5a0800"],
+      blue: ["Blue", "#ffffff", "#6ac8ff", "#0a2a6a"],
+      green: ["Green", "#e8ffb0", "#5ad84a", "#0a3a10"],
+      gold: ["Gold", "#fff8d0", "#ffc83a", "#6a3a00"]
+    })
+  },
+
+  stoneheart: {
+    label: "Stoneheart", icon: "fa-solid fa-hammer", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 5, life: [1.5, 2.5], radius: [0.95, 1.1], size: [0.15, 0.45], out: [0.05, 0.12], swirl: 0.1, colors: RAMP.dust(0.3) },
+      { tex: "rock", mode: "emit", blend: "normal", rate: 5, life: [2.5, 3.5], radius: [1.15, 1.3], size: [0.1, 0.09], out: [0, 0.03], swirl: 0.25, spin: 0.8, colors: [[0, "main", 0], [0.1, "main", 1], [0.85, "main", 1], [1, "main", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 5, life: [0.6, 1.2], radius: [1.05, 1.35], size: [0.09, 0.015], out: [0, 0.04], flicker: 0.6, colors: RAMP.glow() }
+    ], {
+      mountain: ["Mountain", "#ffe8a0", "#8a8478", "#2a2620"],
+      hill: ["Hill", "#fff0c0", "#a8784a", "#3a2410"],
+      duergar: ["Duergar", "#e0c8ff", "#5a5460", "#0a080c"],
+      gemcutter: ["Gemcutter", "#ffc0d8", "#7a6a70", "#2a1018"]
+    })
+  },
+
+  feygrace: {
+    label: "Fey Grace", icon: "fa-solid fa-moon", blend: "add",
+    styles: emitStyles([
+      { tex: "petal", mode: "emit", blend: "normal", rate: 3, life: [3, 4], radius: [1.0, 1.2], size: [0.08, 0.07], out: [0.04, 0.08], swirl: 0.2, wobble: 0.2, spin: 1, colors: RAMP.leaf(0.9) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 12, life: [3, 4.5], radius: [1.0, 1.4], size: [0.05, 0.02], out: [0, 0.04], swirl: 0.12, wobble: 0.3, flicker: 0.5, colors: RAMP.bright() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 6, life: [1.5, 2.5], radius: [1.0, 1.4], size: [0.08, 0.01], out: [0.02, 0.06], flicker: 0.7, spin: 1, colors: RAMP.glow() }
+    ], {
+      highelf: ["High Elf", "#ffffff", "#a8c8ff", "#2a3a6a"],
+      woodelf: ["Wood Elf", "#f0ffd0", "#6ab84a", "#1a3a10"],
+      drow: ["Drow", "#f0d0ff", "#b04aff", "#1a0a2a"],
+      eladrin: ["Eladrin", "#fff0f6", "#ff8ac0", "#3a1a4a"]
+    })
+  },
+
+  gnomishfizz: {
+    label: "Gnomish Fizz", icon: "fa-solid fa-flask", blend: "add",
+    styles: emitStyles([
+      { tex: "bubble", mode: "emit", blend: "add", rate: 8, life: [1.8, 2.8], radius: [0.95, 1.2], size: [0.06, 0.12], out: [0.08, 0.16], wobble: 0.35, colors: RAMP.bright(0.9) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 10, life: [0.6, 1.2], radius: [1.0, 1.3], size: [0.07, 0.01], out: [0.1, 0.3], flicker: 0.5, spin: 3, colors: RAMP.mixed() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 8, life: [1, 2], radius: [1.0, 1.3], size: [0.04, 0.015], out: [0.03, 0.1], wobble: 0.3, flicker: 0.4, colors: RAMP.glow() }
+    ], {
+      rock: ["Rock", "#fff0c0", "#e8a04a", "#3a8ad8"],
+      forest: ["Forest", "#f0ffd0", "#7adf5a", "#ff8a3a"],
+      deep: ["Deep", "#e0f0ff", "#8aa0c0", "#4a4a7a"],
+      illusion: ["Illusion", "#ffffff", "#ff7ad8", "#5ad8ff"]
+    })
+  },
+
+  giantstride: {
+    label: "Giant's Stride", icon: "fa-solid fa-mountain-sun", blend: "normal",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 10, life: [1, 1.6], radius: [1.0, 1.1], size: [0.15, 0.5], out: [0.2, 0.35], colors: RAMP.dust(0.55) },
+      { tex: "rock", mode: "emit", blend: "normal", rate: 4, life: [0.8, 1.4], radius: [1.0, 1.1], size: [0.09, 0.06], out: [0.3, 0.5], spin: 2, colors: [[0, "main", 0], [0.1, "main", 1], [0.8, "main", 1], [1, "main", 0]] },
+      { tex: "glow", mode: "emit", blend: "add", rate: 10, life: [1.5, 2.5], radius: [1.0, 1.3], size: [0.05, 0.02], out: [0.03, 0.08], wobble: 0.2, flicker: 0.3, colors: RAMP.bright() }
+    ], {
+      stone: ["Stone", "#fff0d0", "#9a9488", "#3a3630"],
+      frost: ["Frost", "#ffffff", "#b8dcf0", "#3a6a8a"],
+      fire: ["Fire", "#ffe0a0", "#a86a4a", "#3a1408"],
+      storm: ["Storm", "#e8f8ff", "#8a9ab0", "#1a2a4a"]
+    })
+  },
+
+  luckystars: {
+    label: "Lucky Stars", icon: "fa-solid fa-clover", blend: "add",
+    styles: emitStyles([
+      { tex: "leaf", mode: "emit", blend: "normal", rate: 2.5, life: [2.5, 3.5], radius: [1.0, 1.2], size: [0.09, 0.08], out: [0.05, 0.1], swirl: 0.2, wobble: 0.2, spin: 1.2, colors: RAMP.leaf(0.85) },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 11, life: [1, 2], radius: [1.0, 1.35], size: [0.09, 0.02], out: [0.03, 0.08], flicker: 0.6, spin: 1.5, colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 40, group: 1, lead: 1.2, life: [0.4, 0.7], radius: [1.25, 1.28], size: [0.06, 0], out: [0, 0], colors: RAMP.bright() }
+    ], {
+      lightfoot: ["Lightfoot", "#fffbe0", "#8ad85a", "#2a4a10"],
+      stout: ["Stout", "#ffe8c0", "#c8904a", "#3a2010"],
+      ghostwise: ["Ghostwise", "#f0f0ff", "#9ab0c8", "#2a3040"],
+      lotusden: ["Lotusden", "#fff0ff", "#d88ad8", "#2a1a3a"]
+    })
+  },
+
+  heroicinspiration: {
+    label: "Heroic Inspiration", icon: "fa-solid fa-flag", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 14, life: [1, 1.8], radius: [0.95, 1.1], size: [0.06, 0.015], out: [0.15, 0.3], swirl: 0.25, colors: RAMP.hot() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 55, group: 2, lead: 1.0, life: [0.5, 0.9], radius: [1.2, 1.25], size: [0.065, 0], out: [0, 0], colors: RAMP.glow() },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 4, life: [0.8, 1.5], radius: [1.0, 1.35], size: [0.09, 0.015], out: [0.02, 0.06], flicker: 0.6, colors: RAMP.glow() }
+    ], {
+      valiant: ["Valiant", "#fff8d0", "#ffc84a", "#6a3a00"],
+      noble: ["Noble", "#f8e8ff", "#b07aff", "#2a0a4a"],
+      wanderer: ["Wanderer", "#e8fff8", "#4ad8c0", "#0a3a3a"],
+      steadfast: ["Steadfast", "#ffffff", "#7aa8ff", "#0a1a4a"]
+    })
+  },
+
+  adrenaline: {
+    label: "Adrenaline Rush", icon: "fa-solid fa-hand-fist", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "add", rate: 8, life: [0.8, 1.4], radius: [0.95, 1.1], size: [0.2, 0.5], out: [0.15, 0.3], colors: RAMP.main(0.25) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 40, life: [0.3, 0.5], radius: [1.5, 1.7], size: [0.04, 0.08], out: [-0.6, -0.4], swirl: 0.1, colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 16, life: [0.5, 1.0], radius: [0.95, 1.1], size: [0.06, 0.015], out: [0.3, 0.6], flicker: 0.4, colors: RAMP.hot() }
+    ], {
+      bloodrage: ["Bloodrage", "#ffd0c0", "#e0201a", "#3a0202"],
+      greytusk: ["Grey Tusk", "#e8eef0", "#8a9098", "#202428"],
+      ashlands: ["Ashlands", "#ffe0a0", "#ff7a1a", "#2a1a10"],
+      jade: ["Jade", "#e0ffd0", "#5ad86a", "#0a2a10"]
+    })
+  },
+
+  hellishlegacy: {
+    label: "Hellish Legacy", icon: "fa-solid fa-burst", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 8, life: [1.5, 2.3], radius: [0.95, 1.1], size: [0.15, 0.5], out: [0.06, 0.14], swirl: 0.2, colors: RAMP.shade(0.6) },
+      { tex: "glow", mode: "emit", blend: "add", rate: 26, life: [0.5, 1.0], radius: [0.95, 1.1], size: [0.08, 0.02], out: [0.1, 0.25], swirl: -0.25, wobble: 0.3, colors: RAMP.hot() },
+      { tex: "shard", mode: "emit", blend: "add", rate: 3, life: [0.8, 1.3], radius: [1.0, 1.1], size: [0.1, 0.04], out: [0.05, 0.1], colors: RAMP.glow() }
+    ], {
+      infernal: ["Infernal", "#ffd8a0", "#ff3a1a", "#1a0202"],
+      abyssal: ["Abyssal", "#e8ffb0", "#7adf2a", "#1a0a1a"],
+      chthonic: ["Chthonic", "#e0f0e8", "#5ab8a0", "#050a0a"],
+      zariel: ["Zariel", "#fff0c0", "#ffa02a", "#2a0a0a"]
+    })
+  },
+
+  twinheritage: {
+    label: "Twin Heritage", icon: "fa-solid fa-circle-half-stroke", blend: "add",
+    styles: emitStyles([
+      { tex: "glow", mode: "emit", blend: "add", rate: 70, group: 1, lead: 1.3, life: [0.5, 0.9], radius: [1.2, 1.24], size: [0.07, 0], out: [0, 0], colors: RAMP.bright() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 70, group: 1, lead: -1.3, life: [0.5, 0.9], radius: [1.32, 1.36], size: [0.075, 0], out: [0, 0], colors: [[0, "main", 0], [0.1, "main", 1], [0.6, "main", 0.75], [1, "dark", 0]] },
+      { tex: "sparkle", mode: "emit", blend: "add", rate: 5, life: [1, 2], radius: [1.0, 1.4], size: [0.08, 0.01], out: [0.02, 0.06], flicker: 0.6, colors: RAMP.mixed() }
+    ], {
+      dawn: ["Dawn", "#ffffff", "#ffb04a", "#6a2a00"],
+      dusk: ["Dusk", "#e0e8ff", "#9a5aff", "#1a0a3a"],
+      sylvan: ["Sylvan", "#f0fff0", "#5ad87a", "#0a3a1a"],
+      mariner: ["Mariner", "#f0ffff", "#3ab8e8", "#0a2a4a"]
+    })
+  },
+
+  relentless: {
+    label: "Relentless", icon: "fa-solid fa-shield-heart", blend: "add",
+    styles: emitStyles([
+      { tex: "smoke", mode: "emit", blend: "normal", rate: 7, life: [1.2, 2], radius: [0.95, 1.1], size: [0.15, 0.45], out: [0.1, 0.2], colors: RAMP.shade(0.5) },
+      { tex: "shard", mode: "emit", blend: "add", rate: 7, life: [0.6, 1.0], radius: [1.0, 1.05], size: [0.16, 0.07], out: [0.2, 0.35], colors: RAMP.glow() },
+      { tex: "glow", mode: "emit", blend: "add", rate: 22, life: [0.6, 1.2], radius: [0.95, 1.1], size: [0.07, 0.015], out: [0.1, 0.3], flicker: 0.4, colors: RAMP.hot() }
+    ], {
+      iron: ["Iron", "#ffffff", "#a8b0b8", "#2a2e34"],
+      blood: ["Blood", "#ffc0b0", "#c0181a", "#2a0202"],
+      ash: ["Ash", "#ffe8c0", "#e07a2a", "#2a1a10"],
+      moss: ["Moss", "#e8ffc0", "#6aa84a", "#1a2a10"]
+    })
   }
 };
 
@@ -1305,7 +1474,7 @@ export async function loadTextures(base, loader = src => PIXI.Assets.load(src)) 
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /** Emitter sprites are drawn at size * EMIT_SCALE token radii across (soft textures need room to fade). */
-const EMIT_SCALE = { glow: 4, sparkle: 4, smoke: 2.4, shard: 2.6, leaf: 2.6 };
+const EMIT_SCALE = { glow: 4, sparkle: 4, smoke: 2.4, shard: 2.6, leaf: 2.6, petal: 2.6, rock: 2.6, bubble: 2.6 };
 const EMIT_MAX = 600;          // most live particles in one emitter
 const EMIT_WARMUP = 150;       // 1/60 s steps simulated up front, so a new ring starts alive
 const ROLES = { bright: 0, main: 1, dark: 2 };
@@ -1734,6 +1903,14 @@ class LivelyLayer extends PIXI.Container {
     this.band?.shader?.destroy?.();
     super.destroy({ children: true, ...(options ?? {}) });
   }
+}
+
+/** Make `child` the next child of `parent` right after `anchor` (moves it only when it is not there yet). */
+export function insertAbove(parent, child, anchor) {
+  const at = parent.getChildIndex(anchor);
+  if (child.parent === parent && parent.getChildIndex(child) === at + 1) return;
+  if (child.parent) child.parent.removeChild(child);
+  parent.addChildAt(child, parent.getChildIndex(anchor) + 1);
 }
 
 export class LivelyRing extends PIXI.Container {
