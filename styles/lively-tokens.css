@@ -14,15 +14,11 @@
 .dxlt-config .hint { margin: 0; font-size: var(--font-size-12, 12px); opacity: 0.75; text-align: center; }
 .dxlt-config h3 { margin: 0.4rem 0 0.3rem; font-size: var(--font-size-14, 14px); border-bottom: 1px solid var(--color-border, rgba(255,255,255,0.15)); }
 .dxlt-config h3 small { font-weight: normal; opacity: 0.6; margin-left: 0.3rem; }
-.dxlt-config .dxlt-designs { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; }
-.dxlt-config .dxlt-designs button {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
-  height: 3.4rem; padding: 0.2rem; font-size: var(--font-size-11, 11px); line-height: 1.1; white-space: normal;
-}
-.dxlt-config .dxlt-designs button i { font-size: 1.3rem; margin: 0; }
+.dxlt-config .dxlt-designs select { width: 100%; }
+.dxlt-config .dxlt-designs optgroup { font-weight: bold; }
+.dxlt-config .dxlt-designs option { font-weight: normal; }
 .dxlt-config .dxlt-styles { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .dxlt-config .dxlt-styles button { flex: 0 0 auto; width: auto; padding: 0 0.7rem; }
-.dxlt-config .dxlt-designs button.active,
 .dxlt-config .dxlt-styles button.active,
 .dxlt-config .dxlt-layers button.active {
   border-color: var(--color-warm-2, #ff6400); box-shadow: 0 0 6px var(--color-warm-2, #ff6400);
@@ -61,7 +57,6 @@
 .dxlt-config .dxlt-layer-tools span { flex: 1; font-size: var(--font-size-12, 12px); opacity: 0.75; }
 .dxlt-config .dxlt-layer-tools button { flex: 0 0 2rem; width: 2rem; height: 1.7rem; padding: 0; }
 .dxlt-config .dxlt-layer-tools button i { margin: 0; }
-.dxlt-config .dxlt-designs button.custom { border-style: dashed; }
 .dxlt-config .dxlt-image { display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 0.4rem; }
 .dxlt-config .dxlt-thumb {
   flex: 0 0 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 6px;

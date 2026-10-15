@@ -133,6 +133,13 @@
       "TooNew": "the file was made by a newer version of Lively tokens; update the module first.",
       "ImageFailed": "These images from the file could not be added to this world: {files}",
       "NoUploadImport": "You may not upload files in this world, so these images from the file were not added: {files}. Ask the GM to import the file."
+    },
+    "Category": {
+      "General": "General",
+      "Classes": "Classes",
+      "Species": "Species",
+      "Backgrounds": "Backgrounds",
+      "Custom": "Custom"
     }
   }
 }

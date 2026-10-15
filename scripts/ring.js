@@ -1452,6 +1452,20 @@ export const DESIGNS = {
   }
 };
 
+/**
+ * How the window groups designs in its dropdown: id -> [lang key, design ids]. Designs not listed in
+ * a category land in "general"; the user's own image is its own group at the end.
+ */
+export const DESIGN_CATEGORIES = {
+  classes: ["DXLT.Category.Classes", ["rage", "encore", "radiance", "wildbloom", "steelsparks", "kiflow", "holyaura",
+    "huntertrail", "shadowstep", "wildsurge", "eldritch", "spellweave", "arcforge"]],
+  species: ["DXLT.Category.Species", ["celestialplumes", "dragonbreath", "stoneheart", "feygrace", "gnomishfizz",
+    "giantstride", "luckystars", "heroicinspiration", "adrenaline", "hellishlegacy", "twinheritage", "relentless"]],
+  backgrounds: ["DXLT.Category.Backgrounds", ["votiveglow", "makersmark", "sleightofhand", "alleysmoke", "showstopper",
+    "harvestbreeze", "lanternwatch", "waypoint", "stillmind", "coinshower", "regalbearing", "inklore", "seaspray",
+    "quillwork", "veteransmarch", "wanderlust", "hearthfire", "starlitcamp", "streetscraps"]]
+};
+
 /** The design id of a layer that shows the user's own image. */
 export const CUSTOM = "custom";
 export const MAX_LAYERS = 20;
