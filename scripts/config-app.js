@@ -38,6 +38,7 @@ function designGroups(current) {
 const PREVIEW = 320;   // preview canvas size in px
 
 const escapeHTML = str => String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const docOf = t => t?.document ?? t;     // a Token -> its TokenDocument
 
 /** How a slider's value is shown next to it. */
 const FORMAT = {
@@ -89,24 +90,29 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
    * Open the window.
    * @param {object} [opts]
    * @param {Actor} [opts.actor]  work on this actor (its tokens and prototype token) instead of the selected tokens
+   * @param {Token|TokenDocument} [opts.token]  the token it is opened for (e.g. from its Token HUD): its ring is loaded
    */
-  static open({ actor = null } = {}) {
+  static open({ actor = null, token = null } = {}) {
     if (!canUse()) {
       ui.notifications.warn(game.i18n.localize("DXLT.App.NotAllowed"));
       return null;
     }
     if (actor && !actor.isOwner) return null;
-    if (this.instance) this.instance.setActor(actor);
-    else this.instance = new this({ actor });
+    token = token?.object ?? token;               // a TokenDocument -> its Token (kept as a document when off the canvas)
+    if (token && !docOf(token)?.isOwner) token = null;
+    // Every open starts from the ring of whatever it was opened for, never from what was left in the window.
+    if (this.instance) this.instance.setSubject({ actor, token });
+    else this.instance = new this({ actor, token });
     // Only a window that is already on screen has an element to raise; a new one opens on top anyway.
     if (this.instance.rendered) this.instance.bringToFront();
     this.instance.render({ force: true });
     return this.instance;
   }
 
-  constructor({ actor = null, ...options } = {}) {
+  constructor({ actor = null, token = null, ...options } = {}) {
     super(options);
     this.actor = actor;
+    this.token = actor ? null : token;
     this.#setConfig(this.#initialConfig());
     this.prototype = true;
     this.presetId = null;
@@ -127,24 +133,55 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     this.sel = Math.min(Math.max(0, sel), this.cfg.layers.length - 1);
   }
 
-  /** Tokens the window works on: the actor's tokens on this scene, or the selected tokens the user may change. */
+  /**
+   * Tokens the window works on: the actor's tokens on this scene, or the selected tokens the user may
+   * change, with the token the window was opened for first.
+   */
   #targets() {
     if (this.actor) return actorTokens(this.actor);
-    return (canvas?.tokens?.controlled ?? []).filter(t => t.document?.isOwner);
+    const selected = (canvas?.tokens?.controlled ?? []).filter(t => t.document?.isOwner);
+    const token = this.token;
+    const doc = docOf(token);
+    if (!doc || token.destroyed || !doc.isOwner) return selected;
+    return [token, ...selected.filter(t => t.document !== doc)];
   }
 
-  /** The ring to start the editor with: the target's own ring, else the last one used. */
+  /**
+   * The ring the editor shows: the one saved on what the window was opened for. An actor's is on
+   * its prototype token (a token's own actor: on that token); a token's is on the token itself.
+   */
+  #subjectRing() {
+    if (this.actor) {
+      if (this.actor.isToken) return tokenRing(this.actor.token);
+      return prototypeRing(this.actor) ?? tokenRing(this.#targets()[0]);
+    }
+    return tokenRing(this.#targets()[0]);
+  }
+
+  /**
+   * The ring to start the editor with: the ring saved on the token or actor it was opened for.
+   * One without a ring starts empty; only with nothing to work on does it fall back to this user's last ring.
+   */
   #initialConfig() {
-    const own = tokenRing(this.#targets()[0]) ?? (this.actor ? prototypeRing(this.actor) : null);
-    return own ?? game.settings.get(MODULE_ID, "lastConfig");
+    const own = this.#subjectRing();
+    if (own) return own;
+    const hasSubject = !!this.actor || this.#targets().length > 0;
+    return hasSubject ? {} : game.settings.get(MODULE_ID, "lastConfig");
+  }
+
+  /** Open the window for another actor, token or the selection (both null) and load its ring. */
+  setSubject({ actor = null, token = null } = {}) {
+    this.actor = actor ?? null;
+    this.token = this.actor ? null : (token ?? null);
+    this.#setConfig(this.#initialConfig());
+    this.presetId = null;
+    this.previewSrc = null;
   }
 
   /** Switch between an actor and the token selection (null) while the window is open. */
   setActor(actor) {
     if ((actor ?? null) === this.actor) return;
-    this.actor = actor ?? null;
-    this.#setConfig(this.#initialConfig());
-    this.previewSrc = null;
+    this.setSubject({ actor });
   }
 
   /* -------------------------------------------- */
@@ -339,7 +376,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
 
   async #updatePreviewToken() {
     const token = this.#targets()[0] ?? (this.actor ? null : canvas?.tokens?.controlled?.[0]);
-    const src = token?.document?.texture?.src
+    const src = docOf(token)?.texture?.src
       ?? baseActor(this.actor)?.prototypeToken?.texture?.src ?? this.actor?.img ?? CONST.DEFAULT_TOKEN;
     if (src === this.previewSrc && this.previewToken) return;
     this.previewSrc = src;
@@ -374,6 +411,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   /** Called when the token selection changes on the canvas. */
   onSelectionChanged() {
     if (!this.rendered || this.actor) return;
+    this.token = null;                            // follow the selection from now on
     clearTimeout(this._selTimer);
     this._selTimer = setTimeout(() => this.render({ parts: ["main"] }), 50);
   }
@@ -614,7 +652,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   }
 
   static #onCopy() {
-    const cfg = tokenRing(this.#targets()[0]) ?? (this.actor ? prototypeRing(this.actor) : null);
+    const cfg = this.#subjectRing();
     if (!cfg) return ui.notifications.info(game.i18n.localize("DXLT.App.NoRing"));
     this.#setConfig(cfg);
     this.render({ parts: ["main"] });

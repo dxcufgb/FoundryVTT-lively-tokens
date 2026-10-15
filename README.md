@@ -100,11 +100,12 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   - live preview of the ring around your selected token
   - fine-tune size, speed, opacity, number of particles and an optional colour of your own, per layer
   - apply to or remove from all selected tokens, copy a ring from a token
-  - optionally also store it on the actor's prototype token, so new tokens of that actor get it too
+  - optionally also store it on the actor's prototype token, so new tokens of that actor get it too (a token linked to its character always stores it there, so the character keeps its ring on every scene)
+  - the window always opens with the ring saved on the token (or character) it was opened for, whether the GM or the owner opens it
 - **Open it for a character**, wherever you are working with it:
   - **Character sheet:** *Animated token ring* in the sheet's header controls menu (the **⋮** button), or a **Ring** header button on older-style sheets
   - **Actors sidebar:** right-click an actor → *Animated token ring*
-  - **Token HUD:** the ring button in the left column (for the selected tokens)
+  - **Token HUD:** the ring button in the left column (for that token and any other selected tokens)
 
   Opened for a character, the window works on that character's tokens on the current scene and its prototype token (so a character with no token placed yet still gets its ring). *Use selected tokens instead* switches back to the canvas selection.
 - Rings are part of the token on the canvas, so they follow movement, visibility and elevation instantly: no drift, no lag.
@@ -123,6 +124,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 const api = game.modules.get("dxcufgbs-lively-tokens").api;
 api.open();                                                   // the Animated Border window
 api.open({ actor });                                          // ... for one actor
+api.open({ token });                                          // ... for one token, showing its ring
 api.setActorRing(actor, { design: "druid" });                 // its tokens on the scene + prototype token
 api.clearActorRing(actor);
 api.setRing(token, { design: "flame", style: "blue", scale: 1.2 });   // one layer

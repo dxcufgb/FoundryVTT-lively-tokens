@@ -13,6 +13,7 @@
  * API: game.modules.get("dxcufgbs-lively-tokens").api
  *   .open()                      open the Animated Border window (selected tokens)
  *   .open({actor})               open it for one actor: its tokens on the scene and its prototype token
+ *   .open({token})               open it for one token (plus the other selected tokens), showing that token's ring
  *   .setRing(token, cfg)         give a token (Token or TokenDocument) a ring
  *   .clearRing(token)            remove it
  *   .designs                     available designs and styles
@@ -239,12 +240,23 @@ function tick() {
 
 const docOf = t => t?.document ?? t;
 
+/**
+ * The world actor whose prototype token should carry a token's ring: always for a linked token
+ * (the token is the character, so its ring travels with it), and when asked for any other token.
+ * An unlinked token's own actor is synthetic; its prototype lives on the world actor.
+ */
+function prototypeOwner(doc, prototype) {
+  if (!prototype && !doc.actorLink) return null;
+  const base = baseActor(doc.actor);
+  return base?.isOwner ? base : null;
+}
+
 export async function setRing(token, cfg, { prototype = false } = {}) {
   const doc = docOf(token);
   if (!doc?.isOwner) return false;
   const data = normalizeConfig(cfg);
   await doc.update({ [`flags.${MODULE_ID}.${FLAG}`]: data });
-  if (prototype && doc.actor?.isOwner) await doc.actor.update({ [`prototypeToken.flags.${MODULE_ID}.${FLAG}`]: data });
+  await prototypeOwner(doc, prototype)?.update({ [`prototypeToken.flags.${MODULE_ID}.${FLAG}`]: data });
   return true;
 }
 
@@ -252,7 +264,7 @@ export async function clearRing(token, { prototype = false } = {}) {
   const doc = docOf(token);
   if (!doc?.isOwner) return false;
   await doc.update({ [`flags.${MODULE_ID}.-=${FLAG}`]: null });
-  if (prototype && doc.actor?.isOwner) await doc.actor.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
+  await prototypeOwner(doc, prototype)?.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
   return true;
 }
 
@@ -313,6 +325,8 @@ export async function setActorRing(actor, cfg, { prototype = true } = {}) {
   const tokens = actorTokens(actor);
   await Promise.all(tokens.map(t => setRing(t, data)));
   const base = baseActor(actor);
+  // A linked token already put it on its character's prototype token (see setRing).
+  if (tokens.some(t => t.document.actorLink)) return tokens.length;
   if ((prototype || !tokens.length) && base?.isOwner) await base.update({ [`prototypeToken.flags.${MODULE_ID}.${FLAG}`]: data });
   return tokens.length;
 }
@@ -321,6 +335,8 @@ export async function clearActorRing(actor, { prototype = true } = {}) {
   const tokens = actorTokens(actor);
   await Promise.all(tokens.map(t => clearRing(t)));
   const base = baseActor(actor);
+  // A linked token already put it on its character's prototype token (see setRing).
+  if (tokens.some(t => t.document.actorLink)) return tokens.length;
   if ((prototype || !tokens.length) && base?.isOwner) await base.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
   return tokens.length;
 }
@@ -381,7 +397,7 @@ Hooks.on("renderTokenHUD", (hud, html) => {
   btn.addEventListener("click", ev => {
     ev.preventDefault();
     ev.stopPropagation();
-    LivelyTokensConfig.open();
+    LivelyTokensConfig.open({ token: hud.object });
   });
   col.appendChild(btn);
 });
