@@ -1905,6 +1905,14 @@ class LivelyLayer extends PIXI.Container {
   }
 }
 
+/** Make `child` the next child of `parent` right after `anchor` (moves it only when it is not there yet). */
+export function insertAbove(parent, child, anchor) {
+  const at = parent.getChildIndex(anchor);
+  if (child.parent === parent && parent.getChildIndex(child) === at + 1) return;
+  if (child.parent) child.parent.removeChild(child);
+  parent.addChildAt(child, parent.getChildIndex(anchor) + 1);
+}
+
 export class LivelyRing extends PIXI.Container {
   /**
    * @param {object} cfg        {layers: [...]} (see normalizeConfig)
