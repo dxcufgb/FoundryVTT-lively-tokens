@@ -1641,7 +1641,7 @@ class LivelyLayer extends PIXI.Container {
     } else {
       this.additive = cfg.blend === "add";
     }
-    this.#buildSwarms();
+    // Sprites are built on the first setRadius(), once the creature's size is known.
     this.#buildFilters();
     this.baseAlpha = cfg.alpha;
     this.alpha = cfg.alpha;
