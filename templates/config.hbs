@@ -60,7 +60,7 @@
 
       <h3>{{localize "DXLT.App.Design"}}</h3>
       <div class="dxlt-designs">
-        <select name="design">
+        <select name="design" aria-label="{{localize 'DXLT.App.Design'}}">
           {{#each designGroups}}
           <optgroup label="{{label}}">
             {{#each options}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
