@@ -1,5 +1,11 @@
 # Dxcufgb's lively tokens
 
+[![Foundry v13](https://img.shields.io/github/v/release/dxcufgb/FoundryVTT-lively-tokens?label=Foundry%20v13&logo=foundryvirtualtabletop&color=ff6400)](https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/dxcufgb/FoundryVTT-lively-tokens/module.zip?label=downloads&color=blue)](https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/dxcufgb)\
+[![CI](https://img.shields.io/github/actions/workflow/status/dxcufgb/FoundryVTT-lively-tokens/ci.yml?branch=main&label=CI)](https://github.com/dxcufgb/FoundryVTT-lively-tokens/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/dxcufgb/FoundryVTT-lively-tokens)](LICENSE)
+
 Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class, species and background. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
