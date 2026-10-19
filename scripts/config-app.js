@@ -545,6 +545,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     const i = Number(target.dataset.index);
     if (!this.cfg.layers[i] || i === this.sel) return;
     this.sel = i;
+    this.#browse = null;   // the dropdown follows the newly selected layer's design
     this.render({ parts: ["main"] });
   }
 
