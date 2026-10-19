@@ -20,19 +20,23 @@ import { exportRing, importRing } from "./transfer.js";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 /**
- * The design dropdown: one group per category ("--Classes--", ...), general designs first and the
- * user's own image last. Each option is {id, label, selected}.
+ * The design categories, in dropdown order: general designs first, the user's own image last.
+ * Each is {key, label: "--Name--", ids}. Any design not listed in DESIGN_CATEGORIES is General.
  */
-function designGroups(current) {
+function designCategories() {
   const listed = new Set(Object.values(DESIGN_CATEGORIES).flatMap(([, ids]) => ids));
-  const option = id => ({ id, label: DESIGNS[id].label, selected: id === current });
-  const group = (key, ids) => ({ label: `--${game.i18n.localize(key)}--`, options: ids.filter(id => DESIGNS[id]).map(option) });
+  const category = (key, langKey, ids) =>
+    ({ key, label: `--${game.i18n.localize(langKey)}--`, ids: ids.filter(id => id === CUSTOM || DESIGNS[id]) });
   return [
-    group("DXLT.Category.General", Object.keys(DESIGNS).filter(id => !listed.has(id))),
-    ...Object.values(DESIGN_CATEGORIES).map(([key, ids]) => group(key, ids)),
-    { label: `--${game.i18n.localize("DXLT.Category.Custom")}--`,
-      options: [{ id: CUSTOM, label: game.i18n.localize("DXLT.App.CustomImage"), selected: current === CUSTOM }] }
-  ].filter(g => g.options.length);
+    category("general", "DXLT.Category.General", Object.keys(DESIGNS).filter(id => !listed.has(id))),
+    ...Object.entries(DESIGN_CATEGORIES).map(([key, [langKey, ids]]) => category(key, langKey, ids)),
+    category(CUSTOM, "DXLT.Category.Custom", [CUSTOM])
+  ].filter(c => c.ids.length);
+}
+
+/** The key of the category a design belongs to. */
+function categoryOf(design) {
+  return designCategories().find(c => c.ids.includes(design))?.key ?? "general";
 }
 
 const PREVIEW = 320;   // preview canvas size in px
@@ -50,6 +54,12 @@ const FORMAT = {
 
 export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
+  /**
+   * The category picked in the dropdown, for the layer it was picked on. Once that layer changes
+   * (another layer is selected, or its design is replaced) the dropdown follows the layer's design again.
+   */
+  #browse = null;
+
   static DEFAULT_OPTIONS = {
     id: "dxlt-config",
     classes: ["dxlt-config"],
@@ -57,6 +67,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     window: { title: "DXLT.App.Title", icon: "fa-solid fa-ring", resizable: false },
     position: { width: 880, height: "auto" },
     actions: {
+      design: LivelyTokensConfig.#onDesign,
       style: LivelyTokensConfig.#onStyle,
       selectLayer: LivelyTokensConfig.#onSelectLayer,
       addLayer: LivelyTokensConfig.#onAddLayer,
@@ -225,7 +236,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       canMoveUp: this.sel < this.cfg.layers.length - 1,
       maxLayers: MAX_LAYERS,
 
-      designGroups: designGroups(layer.design),
+      ...this.#designContext(layer),
       isCustom,
       styles: design ? Object.entries(design.styles).map(([id, s]) => ({ id, label: s.label, active: id === layer.style })) : [],
       designLabel: design?.label ?? "",
@@ -306,7 +317,11 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       color?.addEventListener("input", ev => { layer().color = ev.currentTarget.value; this.#rebuildPreview(); });
     }
 
-    html.querySelector("select[name=design]")?.addEventListener("change", ev => this.#setDesign(ev.currentTarget.value));
+    // Picking a category only changes which design buttons are shown; the layer keeps its design.
+    html.querySelector("select[name=category]")?.addEventListener("change", ev => {
+      this.#browse = { layer: layer(), key: ev.currentTarget.value };
+      this.render({ parts: ["main"] });
+    });
     html.querySelector("select[name=motion]")?.addEventListener("change", ev => {
       const m = MOTIONS[ev.currentTarget.value];
       if (!m) return;
@@ -486,9 +501,26 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     }
   }
 
+  /** The category dropdown and the buttons for the designs in the shown category. */
+  #designContext(layer) {
+    const categories = designCategories();
+    const browsed = this.#browse?.layer === layer ? this.#browse.key : null;
+    const shown = categories.find(c => c.key === browsed) ?? categories.find(c => c.key === categoryOf(layer.design));
+    return {
+      categories: categories.map(c => ({ key: c.key, label: c.label, selected: c === shown })),
+      designs: (shown?.ids ?? []).map(id => id === CUSTOM
+        ? { id, label: game.i18n.localize("DXLT.App.CustomImage"), icon: "fa-solid fa-image", custom: true, active: id === layer.design }
+        : { id, label: DESIGNS[id].label, icon: DESIGNS[id].icon, active: id === layer.design })
+    };
+  }
+
   /* -------------------------------------------- */
   /*  Actions                                     */
   /* -------------------------------------------- */
+
+  static #onDesign(event, target) {
+    this.#setDesign(target.dataset.design);
+  }
 
   #setDesign(id) {
     const old = this.layer;
@@ -513,6 +545,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     const i = Number(target.dataset.index);
     if (!this.cfg.layers[i] || i === this.sel) return;
     this.sel = i;
+    this.#browse = null;   // the dropdown follows the newly selected layer's design
     this.render({ parts: ["main"] });
   }
 
