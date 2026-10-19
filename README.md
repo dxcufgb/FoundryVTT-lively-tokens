@@ -102,7 +102,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 - **Auto-scaling:** rings grow with the token's size (Medium, Large, Huge, ...), particles too.
 - **Token Controls button** (ring icon) opens the **Animated Border** window:
-  - pick a layer's design from one dropdown, grouped as General, Classes, Species, Backgrounds and Custom (your own image)
+  - pick a category (General, Classes, Species, Backgrounds or Custom for your own image) from a dropdown, then a layer's design from the buttons for that category
   - live preview of the ring around your selected token
   - fine-tune size, speed, opacity, number of particles and an optional colour of your own, per layer
   - apply to or remove from all selected tokens, copy a ring from a token

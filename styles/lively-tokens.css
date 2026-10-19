@@ -14,11 +14,17 @@
 .dxlt-config .hint { margin: 0; font-size: var(--font-size-12, 12px); opacity: 0.75; text-align: center; }
 .dxlt-config h3 { margin: 0.4rem 0 0.3rem; font-size: var(--font-size-14, 14px); border-bottom: 1px solid var(--color-border, rgba(255,255,255,0.15)); }
 .dxlt-config h3 small { font-weight: normal; opacity: 0.6; margin-left: 0.3rem; }
-.dxlt-config .dxlt-designs select { width: 100%; }
-.dxlt-config .dxlt-designs optgroup { font-weight: bold; }
-.dxlt-config .dxlt-designs option { font-weight: normal; }
+.dxlt-config .dxlt-designs select { width: 100%; margin-bottom: 0.3rem; }
+.dxlt-config .dxlt-design-buttons { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; }
+.dxlt-config .dxlt-design-buttons button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
+  height: 3.4rem; padding: 0.2rem; font-size: var(--font-size-11, 11px); line-height: 1.1; white-space: normal;
+}
+.dxlt-config .dxlt-design-buttons button i { font-size: 1.3rem; margin: 0; }
+.dxlt-config .dxlt-design-buttons button.custom { border-style: dashed; }
 .dxlt-config .dxlt-styles { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .dxlt-config .dxlt-styles button { flex: 0 0 auto; width: auto; padding: 0 0.7rem; }
+.dxlt-config .dxlt-design-buttons button.active,
 .dxlt-config .dxlt-styles button.active,
 .dxlt-config .dxlt-layers button.active {
   border-color: var(--color-warm-2, #ff6400); box-shadow: 0 0 6px var(--color-warm-2, #ff6400);
