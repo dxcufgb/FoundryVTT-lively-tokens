@@ -26,6 +26,6 @@ of up to 20 layers stored as a flag on the token (and optionally its actor's pro
 - **Permissions**: rings are written only through `setRing` / `clearRing` / `setActorRing` / `clearActorRing`, which require `isOwner` on the token or actor; the window and every entry point check `canUse()` (GM, or the world setting `playersCanUse`) and ownership. Keep those checks on any new write path.
 - **Untrusted ring data**: flags written by other users and imported files go through `normalizeConfig` before use. Keep the clamps, the hex check on `color`, and the `javascript:` / `data:text` filter on a custom layer's `src`; on import, images are accepted only by sniffed bytes (PNG, WebP, JPEG, GIF, AVIF; never SVG) and under `MAX_IMAGE_BYTES`. Every client that sees the token loads that `src`.
 - **Escaping**: templates use `{{ }}` only; dialog HTML built in code goes through `escapeHTML`.
-- **Setting scopes**: `playersCanUse` is `world`; `enabled`, `quality` and `lastConfig` are `client`.
+- **Setting scopes**: `playersCanUse` and `autoRings` are `world`; `enabled`, `quality` and `lastConfig` are `client`.
 - **Stored data**: design ids, style ids and layer field names are saved in token flags, prototype tokens, presets and exported files; renaming one silently falls back to the first style or the default design. `normalizeConfig` also accepts a bare single layer (the 1.0 format); keep that.
 - Rings sit right after the token's void mesh (see `placeRing`): moving them elsewhere puts them under the token art or above bars and nameplates.
