@@ -8,6 +8,10 @@
         "Name": "Players can give their tokens rings",
         "Hint": "Players may open the Animated Border window and put rings on tokens they own. The GM can always."
       },
+      "Auto": {
+        "Name": "Automatic character rings",
+        "Hint": "A D&D 5e character with no ring of its own shows one built from its class, species and background. A ring saved on the token or character always wins; removing the ring keeps it off. Players see it on characters they have at least Limited permission on."
+      },
       "Enabled": {
         "Name": "Show animated rings",
         "Hint": "Turn the rings off on this computer only, for example if the canvas is slow."
