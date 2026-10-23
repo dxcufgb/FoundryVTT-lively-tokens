@@ -116,11 +116,13 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
   Opened for a character, the window works on that character's tokens on the current scene and its prototype token (so a character with no token placed yet still gets its ring). *Use selected tokens instead* switches back to the canvas selection.
 - Rings are part of the token on the canvas, so they follow movement, visibility and elevation instantly: no drift, no lag.
 - **Players** can give rings to tokens they own (a world setting lets the GM turn this off).
+- **Automatic character rings** (D&D 5e): a character with no ring of its own, such as one just imported, shows a ring built from its background, species and class (styled by its subclass or lineage when one matches), e.g. a Lightfoot Halfling Rogue (Thief) with the Criminal background gets Alley Smoke, Lucky Stars and Shadow Step. Nothing is written to the character until you save a ring, and a saved ring always wins. Removing the ring in the window keeps it off.
 - If another animated token border / ring module is active and adds its own Token Controls button, that button is moved into this window, so both share one place in the toolbar.
 
 ## Settings
 
 - **Players can give their tokens rings** (world): on by default.
+- **Automatic character rings** (world): on by default; D&D 5e characters without a ring show one built from their class, species and background.
 - **Show animated rings** (per user): turn the rings off on this computer only.
 - **Ring detail** (per user): High / Medium / Low number of particles.
 

@@ -49,6 +49,11 @@ Hooks.once("init", () => {
     scope: "world", config: true, type: Boolean, default: true,
     onChange: () => ui.controls?.render({ reset: true })
   });
+  game.settings.register(MODULE_ID, "autoRings", {
+    name: "DXLT.Settings.Auto.Name", hint: "DXLT.Settings.Auto.Hint",
+    scope: "world", config: true, type: Boolean, default: true,
+    onChange: () => refreshAll()
+  });
   game.settings.register(MODULE_ID, "enabled", {
     name: "DXLT.Settings.Enabled.Name", hint: "DXLT.Settings.Enabled.Hint",
     scope: "client", config: true, type: Boolean, default: true,
@@ -141,9 +146,69 @@ function ringFlag(doc) {
   return doc?.flags?.[MODULE_ID]?.[FLAG] ?? null;
 }
 
+/* -------------------------------------------- */
+/*  Automatic rings (dnd5e characters)          */
+/* -------------------------------------------- */
+
+// Keyword in the item's name/identifier (letters only, lower case) -> design. First match wins,
+// so "halfelf" comes before "elf" and "halforc" before "orc".
+const AUTO_DESIGNS = {
+  background: [["acolyte", "votiveglow"], ["artisan", "makersmark"], ["charlatan", "sleightofhand"], ["criminal", "alleysmoke"],
+    ["entertainer", "showstopper"], ["farmer", "harvestbreeze"], ["guard", "lanternwatch"], ["guide", "waypoint"],
+    ["hermit", "stillmind"], ["merchant", "coinshower"], ["noble", "regalbearing"], ["sage", "inklore"], ["sailor", "seaspray"],
+    ["pirate", "seaspray"], ["scribe", "quillwork"], ["soldier", "veteransmarch"], ["wayfarer", "wanderlust"],
+    ["folkhero", "hearthfire"], ["outlander", "starlitcamp"], ["urchin", "streetscraps"]],
+  race: [["aasimar", "celestialplumes"], ["dragonborn", "dragonbreath"], ["halfelf", "twinheritage"], ["halforc", "relentless"],
+    ["dwarf", "stoneheart"], ["duergar", "stoneheart"], ["elf", "feygrace"], ["eladrin", "feygrace"], ["drow", "feygrace"],
+    ["gnome", "gnomishfizz"], ["goliath", "giantstride"], ["halfling", "luckystars"], ["human", "heroicinspiration"],
+    ["orc", "adrenaline"], ["tiefling", "hellishlegacy"]],
+  class: [["barbarian", "rage"], ["bard", "encore"], ["cleric", "radiance"], ["druid", "wildbloom"], ["fighter", "steelsparks"],
+    ["monk", "kiflow"], ["paladin", "holyaura"], ["ranger", "huntertrail"], ["rogue", "shadowstep"], ["sorcerer", "wildsurge"],
+    ["warlock", "eldritch"], ["wizard", "spellweave"], ["artificer", "arcforge"]]
+};
+const AUTO_TYPES = new Set(["background", "race", "class", "subclass"]);
+const plain = s => String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
+const itemText = item => item ? plain(item.system?.identifier) + plain(item.name) : "";
+
+/** A layer for an item, with the style named in `styleText` (subclass, lineage) when there is one. */
+function autoLayer(type, item, styleText) {
+  const text = itemText(item);
+  const design = text && AUTO_DESIGNS[type].find(([key]) => text.includes(key))?.[1];
+  if (!design || !DESIGNS[design]) return null;
+  const style = Object.keys(DESIGNS[design].styles).find(s => styleText.includes(s));
+  return { design, style };
+}
+
+/**
+ * The ring a dnd5e character gets when it has none of its own: background, species and class
+ * (highest level, styled by its subclass), bottom to top. Null for anything else.
+ */
+export function autoRing(actor) {
+  actor = baseActor(actor);
+  if (game.system.id !== "dnd5e" || actor?.type !== "character" || !game.settings.get(MODULE_ID, "autoRings")) return null;
+  const items = actor.items;
+  const race = items.find(i => i.type === "race");
+  const cls = items.filter(i => i.type === "class").sort((a, b) => (b.system?.levels ?? 0) - (a.system?.levels ?? 0))[0];
+  const clsId = cls?.system?.identifier || plain(cls?.name);
+  const sub = cls && items.find(i => i.type === "subclass" && plain(i.system?.classIdentifier) === plain(clsId));
+  const layers = [
+    autoLayer("background", items.find(i => i.type === "background"), ""),
+    autoLayer("race", race, itemText(race)),
+    autoLayer("class", cls, itemText(sub))
+  ].filter(Boolean);
+  return layers.length ? normalizeConfig({ layers }) : null;
+}
+
+/** The ring shown for these flags: the saved one, else the automatic one unless the ring was removed. */
+function shownRing(flags, actor) {
+  const own = flags?.[MODULE_ID]?.[FLAG];
+  if (own) return normalizeConfig(own);
+  return flags?.[MODULE_ID]?.noAuto ? null : autoRing(actor);
+}
+
 async function syncToken(token) {
   if (!token || token.destroyed || !token.document) return;
-  const flag = game.settings.get(MODULE_ID, "enabled") ? ringFlag(token.document) : null;
+  const flag = game.settings.get(MODULE_ID, "enabled") ? shownRing(token.document.flags, token.document.actor) : null;
   let ring = token._dxltRing;
   if (ring?.destroyed) ring = token._dxltRing = null;
 
@@ -212,6 +277,12 @@ Hooks.on("destroyToken", token => {
   token._dxltRing = null;             // the ring is destroyed with the token's children
 });
 Hooks.on("canvasTearDown", () => state.tokens.clear());
+// Class, species or background changed (e.g. an import finishing): refresh the automatic ring.
+for (const hook of ["createItem", "updateItem", "deleteItem"]) {
+  Hooks.on(hook, item => {
+    if (AUTO_TYPES.has(item.type)) item.parent?.getActiveTokens?.().forEach(t => syncToken(t));
+  });
+}
 Hooks.on("canvasReady", () => { refreshAll(); startTicker(); });
 
 /* -------------------------------------------- */
@@ -260,17 +331,21 @@ export async function setRing(token, cfg, { prototype = false } = {}) {
   return true;
 }
 
+// Removing a ring also marks it off, so the automatic ring does not come back in its place.
+const cleared = (prefix = "") => ({ [`${prefix}flags.${MODULE_ID}.-=${FLAG}`]: null, [`${prefix}flags.${MODULE_ID}.noAuto`]: true });
+
 export async function clearRing(token, { prototype = false } = {}) {
   const doc = docOf(token);
   if (!doc?.isOwner) return false;
-  await doc.update({ [`flags.${MODULE_ID}.-=${FLAG}`]: null });
-  await prototypeOwner(doc, prototype)?.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
+  await doc.update(cleared());
+  await prototypeOwner(doc, prototype)?.update(cleared("prototypeToken."));
   return true;
 }
 
+/** The ring a token shows: its own, else its character's automatic one. */
 export function tokenRing(token) {
-  const f = ringFlag(docOf(token));
-  return f ? normalizeConfig(f) : null;
+  const doc = docOf(token);
+  return doc ? shownRing(doc.flags, doc.actor) : null;
 }
 
 /* -------------------------------------------- */
@@ -310,10 +385,10 @@ export function actorTokens(actor) {
   return (actor?.getActiveTokens?.() ?? []).filter(t => t.document?.isOwner);
 }
 
-/** The ring stored on the actor's prototype token, if any. */
+/** The ring of the actor's prototype token: the stored one, else the automatic one. */
 export function prototypeRing(actor) {
-  const f = baseActor(actor)?.prototypeToken?.flags?.[MODULE_ID]?.[FLAG];
-  return f ? normalizeConfig(f) : null;
+  const base = baseActor(actor);
+  return base ? shownRing(base.prototypeToken?.flags, base) : null;
 }
 
 /**
@@ -337,7 +412,7 @@ export async function clearActorRing(actor, { prototype = true } = {}) {
   const base = baseActor(actor);
   // A linked token already put it on its character's prototype token (see setRing).
   if (tokens.some(t => t.document.actorLink)) return tokens.length;
-  if ((prototype || !tokens.length) && base?.isOwner) await base.update({ [`prototypeToken.flags.${MODULE_ID}.-=${FLAG}`]: null });
+  if ((prototype || !tokens.length) && base?.isOwner) await base.update(cleared("prototypeToken."));
   return tokens.length;
 }
 
