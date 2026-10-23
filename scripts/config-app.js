@@ -164,7 +164,10 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
   #subjectRing() {
     if (this.actor) {
       if (this.actor.isToken) return tokenRing(this.actor.token);
-      return prototypeRing(this.actor) ?? tokenRing(this.#targets()[0]);
+      // Saved rings first (character, then its token); the automatic ring only when neither has one.
+      const token = this.#targets()[0];
+      return prototypeRing(this.actor, { auto: false }) ?? tokenRing(token, { auto: false })
+        ?? prototypeRing(this.actor);
     }
     return tokenRing(this.#targets()[0]);
   }

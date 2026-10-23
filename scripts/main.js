@@ -142,10 +142,6 @@ export async function ringTextures(cfg) {
   return { ...base, custom };
 }
 
-function ringFlag(doc) {
-  return doc?.flags?.[MODULE_ID]?.[FLAG] ?? null;
-}
-
 /* -------------------------------------------- */
 /*  Automatic rings (dnd5e characters)          */
 /* -------------------------------------------- */
@@ -280,7 +276,9 @@ Hooks.on("canvasTearDown", () => state.tokens.clear());
 // Class, species or background changed (e.g. an import finishing): refresh the automatic ring.
 for (const hook of ["createItem", "updateItem", "deleteItem"]) {
   Hooks.on(hook, item => {
-    if (AUTO_TYPES.has(item.type)) item.parent?.getActiveTokens?.().forEach(t => syncToken(t));
+    if (AUTO_TYPES.has(item.type) && game.system.id === "dnd5e" && game.settings.get(MODULE_ID, "autoRings")) {
+      item.parent?.getActiveTokens?.().forEach(t => syncToken(t));
+    }
   });
 }
 Hooks.on("canvasReady", () => { refreshAll(); startTicker(); });
@@ -342,10 +340,10 @@ export async function clearRing(token, { prototype = false } = {}) {
   return true;
 }
 
-/** The ring a token shows: its own, else its character's automatic one. */
-export function tokenRing(token) {
+/** The ring a token shows: its own, else (unless `auto` is false) its character's automatic one. */
+export function tokenRing(token, { auto = true } = {}) {
   const doc = docOf(token);
-  return doc ? shownRing(doc.flags, doc.actor) : null;
+  return doc ? shownRing(doc.flags, auto ? doc.actor : null) : null;
 }
 
 /* -------------------------------------------- */
@@ -385,10 +383,10 @@ export function actorTokens(actor) {
   return (actor?.getActiveTokens?.() ?? []).filter(t => t.document?.isOwner);
 }
 
-/** The ring of the actor's prototype token: the stored one, else the automatic one. */
-export function prototypeRing(actor) {
+/** The ring of the actor's prototype token: the stored one, else (unless `auto` is false) the automatic one. */
+export function prototypeRing(actor, { auto = true } = {}) {
   const base = baseActor(actor);
-  return base ? shownRing(base.prototypeToken?.flags, base) : null;
+  return base ? shownRing(base.prototypeToken?.flags, auto ? base : null) : null;
 }
 
 /**
