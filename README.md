@@ -6,6 +6,8 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/dxcufgb/FoundryVTT-lively-tokens/ci.yml?branch=main&label=CI)](https://github.com/dxcufgb/FoundryVTT-lively-tokens/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/dxcufgb/FoundryVTT-lively-tokens)](LICENSE)
 
+<a href="https://dxcufgb.github.io/FVTT-dev-showcase/"><img src="https://dxcufgb.github.io/FVTT-dev-showcase/assets/img/workshop-badge.png" alt="Dxcufgb's Workshop: every Foundry VTT project, video and changelog in one place" width="650"></a>
+
 Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class, species and background. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
