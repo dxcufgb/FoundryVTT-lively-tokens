@@ -7,6 +7,8 @@
 #
 # People install from https://github.com/<owner>/<repo>/releases/latest/download/module.json
 # (private modules: through the Foundry private GitHub proxy, which serves the same two files).
+# With the repository secret SITE_DISPATCH_TOKEN, the Workshop site (dxcufgb/FVTT-dev-showcase) rebuilds right
+# after the release; without it, the site's 6-hourly build picks the release up.
 
 name: Release module
 
@@ -39,7 +41,9 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - uses: dxcufgb/foundry-module-ci/release@4525ac06910f7e045b9a82916967538366902ff4 # v1.0.0
+      - uses: dxcufgb/foundry-module-ci/release@e98d175606a94cda4734fd1510096153c40d3ee8 # v1.1.0
         with:
           version: ${{ inputs.version }}
           github-token: ${{ github.token }}
+          # Optional: asks the Workshop site to rebuild once the release is out. Without the secret nothing changes.
+          site-dispatch-token: ${{ secrets.SITE_DISPATCH_TOKEN }}
