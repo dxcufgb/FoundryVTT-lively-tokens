@@ -1,9 +1,10 @@
 # Dxcufgb's lively tokens
 
 FoundryVTT v13 module (id `dxcufgbs-lively-tokens`, the install folder must have the same name), system agnostic.
-Draws animated rings and particle effects around tokens with PIXI (v7, Foundry's global `PIXI`): a ring is a stack
-of up to 20 layers stored as a flag on the token (and optionally its actor's prototype token), edited in the
-**Animated Border** window. No build step and no npm dependencies.
+Draws animated effects (particle emitters and shader bands) around tokens with PIXI (v7, Foundry's global `PIXI`). It
+is not a token ring frame and does not use or replace Foundry's dynamic token rings. In the code a "ring" (`LivelyRing`,
+flag `ring`) is the stack of up to 20 effect layers on a token, stored as a flag on the token (and optionally its actor's
+prototype token), edited in the **Animated Border** window. No build step and no npm dependencies.
 
 ## Layout
 - `scripts/main.js` – settings, API, the Token-controls button (it folds other "animated border/ring" modules' buttons into the window), syncing rings onto Token placeables (`syncToken`, `placeRing` right above the token's void mesh, `layout`), the single ticker, `setRing` / `clearRing` / `setActorRing` / `clearActorRing`, saved effects (User flag `presets`), and the sheet header, Actors-sidebar and Token HUD entries.
@@ -11,7 +12,7 @@ of up to 20 layers stored as a flag on the token (and optionally its actor's pro
 - `scripts/config-app.js`, `templates/config.hbs`, `styles/lively-tokens.css` – the Animated Border window (ApplicationV2) with its own `PIXI.Application` preview.
 - `scripts/transfer.js` – `.lively-ring.json` export/import (format `dxcufgbs-lively-tokens.ring`, `FORMAT_VERSION` 1) with embedded images, uploaded on import to `worlds/<world>/dxcufgbs-lively-tokens/imported/`.
 - `scripts/constants.js` – `MODULE_ID`, `FLAG` (`"ring"`).
-- `textures/` – Kenney Particle Pack sheets (CC0): `smoke`, `flames`, `stars`, `twirls`, `rune`, `ring` (`SHEETS` in `ring.js`).
+- `textures/` – Kenney Particle Pack sheets (CC0): `smoke`, `flames`, `stars`, `twirls`, `rune` (`SHEETS` in `ring.js`).
 - `.github/workflows/ci.yml` / `release.yml` – thin callers of `dxcufgb/foundry-module-ci` (checks, packaging, release); identical in every module, do not edit here.
 
 ## Conventions
