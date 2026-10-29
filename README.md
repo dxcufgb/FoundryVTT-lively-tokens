@@ -8,7 +8,9 @@
 
 <a href="https://dxcufgb.github.io/FVTT-dev-showcase/"><img src="https://dxcufgb.github.io/FVTT-dev-showcase/assets/img/workshop-badge.png" alt="Dxcufgb's Workshop: every Foundry VTT project, video and changelog in one place" width="650"></a>
 
-Cinematic animated rings around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class, species and background. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+Cinematic animated effects around tokens: vines that sway, smoke that curls, chains that creep, gears that tick, flames, runes, sunbeams, drifting petals, fireflies, swirling wormholes, lightning, ice, water, force fields, music, hearts, necrotic tendrils, orbiting stones and circling knives, plus a particle effect for every D&D 5e class, species and background. Stack several into one ring, or bring your own image. Give your players' characters (or your villains) a presence on the map.
+
+Everything is drawn live around the token: particle emitters, and for the general designs also a moving band drawn by a shader. A "ring" in this module is the stack of those effects on a token. It is not a token frame, and it does not use or replace Foundry's own dynamic token rings.
 
 **Foundry VTT:** v13 · system agnostic (tested with dnd5e 5.2.5)
 
@@ -22,7 +24,7 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ## Features
 
-- **63 ring designs, each with several styles:**
+- **63 designs, each with several styles:**
 
   | Design | Styles |
   | --- | --- |
@@ -132,23 +134,55 @@ https://github.com/dxcufgb/FoundryVTT-lively-tokens/releases/latest/download/mod
 
 ```js
 const api = game.modules.get("dxcufgbs-lively-tokens").api;
-api.open();                                                   // the Animated Border window
+api.open();                                                   // the Animated Border window (selected tokens)
 api.open({ actor });                                          // ... for one actor
-api.open({ token });                                          // ... for one token, showing its ring
-api.setActorRing(actor, { design: "druid" });                 // its tokens on the scene + prototype token
-api.clearActorRing(actor);
-api.setRing(token, { design: "flame", style: "blue", scale: 1.2 });   // one layer
-api.setRing(token, { layers: [                                // several, bottom to top
+api.open({ token });                                          // ... for one token (Token or TokenDocument), showing its ring
+await api.setActorRing(actor, { design: "druid" });           // its tokens on the scene + prototype token -> number of tokens
+await api.clearActorRing(actor);
+await api.setRing(token, { design: "flame", style: "blue", scale: 1.2 });   // one layer -> true, or false if not allowed
+await api.setRing(token, { layers: [                          // several, bottom to top
   { design: "flame", style: "fire" },
   { design: "chains", style: "hellforged", glow: 0.5 },
   { design: "custom", src: "path/to/crest.png", motion: "orbit", count: 4, size: 0.25, colorMode: "colorize", color: "#ff8a2a" }
 ] });
-api.clearRing(token);
-api.designs;                                                  // all designs and styles
-api.presets();                                                // your saved effects
+await api.setRing(token, { design: "glyphs" }, { prototype: true });   // also on its actor's prototype token
+await api.clearRing(token);
+api.designs;                                                  // all designs and styles, by id
+api.presets();                                                // your saved effects: [{ id, name, cfg }]
 await api.exportRing(cfg, "My ring");                         // download it as one file, images included
-const { name, cfg: ring } = await api.importRing(file);       // read such a file (a File or its text)
+const { name, cfg: ring, uploaded, skipped } = await api.importRing(file);   // read such a file
 ```
+
+- `open(...)` needs the same rights as the button: the GM, or a player when **Players can give their tokens rings** is on (otherwise it shows a warning and returns `null`). It returns the window.
+- `setRing(token, cfg, { prototype = false })` and `clearRing(token, { prototype = false })` work on a Token or TokenDocument the user owns, and return `false` when they don't. A token linked to its actor always stores the ring on the actor's prototype token as well; `prototype: true` does that for an unlinked token too. `clearRing` also turns the automatic character ring off for that token.
+- `setActorRing(actor, cfg, { prototype = true })` and `clearActorRing(actor, { prototype = true })` change the actor's tokens on the current scene that the user owns, plus its prototype token (with `prototype: false` only when it has no token on the scene), and return the number of tokens changed.
+- `cfg` is `{ layers: [layer, ...] }` (up to 20, bottom to top) or one bare layer. Missing fields get their defaults and every value is clamped, so unknown designs or styles fall back to valid ones. Layer fields:
+  - every layer: `design` (an id from `api.designs`, or `"custom"`), `style` (a style id of that design), `scale` 0.5–2.5, `speed` 0–4, `alpha` 0–1, `density` 0–3, `color` (`"#rrggbb"` or `null`), and the effects `glow`, `pulse`, `rainbow` 0–1 and `spin` -2–2
+  - `"custom"` layers also: `src` (image path or URL), `motion` (`center`, `spin`, `orbit`, `wander`, `rise`, `flutter`, `puff`, `inward`), `count` 1–40, `size` 0.05–3, `blend` (`normal` or `add`), `colorMode` (`original`, `tint`, `colorize`, `hue`) and `hue` 0–360
+- `api.designs` is `{ id: { label, icon, blend, band?, styles: { id: { label, colors: [bright, main, dark] } } } }`. Designs without a `band` are particle effects only.
+- `exportRing(cfg, name)` saves the file in the browser and returns `{ file, data, missing }` (`missing`: images that could only be kept as links).
+- `importRing(source)` takes a `File`, its text or the parsed object. It uploads the file's images into `worlds/<world>/dxcufgbs-lively-tokens/imported/` (if the user may upload files) and returns `{ name, cfg, uploaded, skipped }`; it does not put the ring on a token or into the saved effects. It throws if the file is not a ring file or comes from a newer version.
+
+**From another module**
+
+The API is set during `init`, so it is there from `setup` on. Make the integration optional:
+
+```js
+Hooks.once("ready", async () => {
+  const api = game.modules.get("dxcufgbs-lively-tokens")?.active ? game.modules.get("dxcufgbs-lively-tokens").api : null;
+  if (!api) return;   // Lively tokens not installed or not enabled
+  const token = canvas.tokens.controlled[0];
+  if (token) await api.setRing(token, { design: "storm", style: "arcane" });
+});
+```
+
+Add `{ "id": "dxcufgbs-lively-tokens", "type": "module" }` to `relationships.recommends` in your `module.json`. The module calls no hooks of its own.
+
+**Data**
+
+- `flags.dxcufgbs-lively-tokens.ring` on tokens and on actors' prototype tokens: the ring, `{ layers: [...] }` as above. `flags.dxcufgbs-lively-tokens.noAuto` (`true`) marks a ring that was removed, so the automatic ring stays off. Read them with `token.document.getFlag("dxcufgbs-lively-tokens", "ring")`; write through the API, not directly.
+- Saved effects: `flags.dxcufgbs-lively-tokens.presets` on each User, read them with `api.presets()`.
+- Exported files: `<name>.lively-ring.json`, `"format": "dxcufgbs-lively-tokens.ring"`, `"formatVersion": 1`, with `name`, `exported`, `moduleVersion`, `ring` (`{ layers }`; a custom layer keeps its `src` plus `image`, the key of its embedded copy) and `images` (`{ key: { name, type, size, data } }`, `data` a base64 data URL).
 
 ## License
 
