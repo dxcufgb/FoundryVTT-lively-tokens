@@ -1593,7 +1593,7 @@ function swarmColors(def, custom) {
 /* ======================================================================== */
 
 /** Kenney Particle Pack sheets (CC0): name -> variants in a 2x2 sheet, 1 = single image. */
-const SHEETS = { smoke: 4, flames: 4, stars: 4, twirls: 4, rune: 1, ring: 1 };
+const SHEETS = { smoke: 4, flames: 4, stars: 4, twirls: 4, rune: 1 };
 
 function canvasTexture(size, draw) {
   const c = document.createElement("canvas");
