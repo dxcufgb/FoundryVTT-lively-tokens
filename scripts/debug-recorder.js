@@ -19,6 +19,7 @@ const RECORDER_ID = "dxcufgbs-debug-recorder";
 
 let recorder = null;          // the recorder's API once we registered with it
 let snapshotFn = null;        // () => plain data, given by registerDebugRecorder
+const errors = { counts: {}, last: null };   // fixed error codes only, never messages or paths
 
 /** The recorder's API, if it is installed and ready. */
 function api() {
@@ -64,4 +65,18 @@ export function crumb(key, data) {
   try {
     if (rec.isRecording?.()) rec.breadcrumb(MODULE_ID, key, data);
   } catch (_) { /* the recorder must never break this module */ }
+}
+
+/**
+ * Count an error or fallback for the snapshot. `code` is a fixed id from this module's code
+ * (e.g. "sync"), never an error message, name or path.
+ */
+export function noteError(code) {
+  errors.counts[code] = (errors.counts[code] ?? 0) + 1;
+  errors.last = code;
+}
+
+/** The error codes counted so far: {counts: {code: n}, last}. */
+export function errorCounts() {
+  return { counts: { ...errors.counts }, last: errors.last };
 }

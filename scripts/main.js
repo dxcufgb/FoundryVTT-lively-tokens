@@ -26,7 +26,7 @@ import { MODULE_ID, FLAG } from "./constants.js";
 import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing, insertAbove, ringStats } from "./ring.js";
 import { LivelyTokensConfig } from "./config-app.js";
 import { exportRing, importRing } from "./transfer.js";
-import { registerDebugRecorder, crumb } from "./debug-recorder.js";
+import { registerDebugRecorder, crumb, noteError, errorCounts } from "./debug-recorder.js";
 
 export { MODULE_ID, FLAG };
 const TOOL = "dxcufgbs-lively-tokens";
@@ -36,8 +36,7 @@ const state = {
   loading: null,
   tokens: new Set(),      // Token placeables that currently carry a ring
   ticking: false,
-  partners: [],           // tool buttons of other animated-ring/border modules folded into our window
-  errors: { textures: 0, customImages: 0, import: 0, export: 0, lastError: null }   // for the debug recorder (codes only)
+  partners: []            // tool buttons of other animated-ring/border modules folded into our window
 };
 export const partners = () => state.partners;
 
@@ -98,14 +97,8 @@ function debugSnapshot() {
     partnerModules: partnerModules().map(m => m.id),
     configWindowOpen: !!LivelyTokensConfig.instance?.rendered,
     savedEffects: presets().length,
-    errors: { ...state.errors }
+    errors: errorCounts()
   };
-}
-
-/** Count an error for the debug snapshot (a fixed code, never a message or path). */
-export function noteError(code) {
-  if (code in state.errors) state.errors[code]++;
-  state.errors.lastError = code;
 }
 
 export function canUse() {

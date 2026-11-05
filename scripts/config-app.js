@@ -13,10 +13,10 @@ import {
 import { MODULE_ID } from "./constants.js";
 import {
   canUse, partners, partnerModules, setRing, clearRing, tokenRing, ringTextures,
-  actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing, presets, savePreset, deletePreset, noteError
+  actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing, presets, savePreset, deletePreset
 } from "./main.js";
 import { exportRing, importRing } from "./transfer.js";
-import { crumb } from "./debug-recorder.js";
+import { crumb, noteError } from "./debug-recorder.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
