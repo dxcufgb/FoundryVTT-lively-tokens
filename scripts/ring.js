@@ -2236,3 +2236,41 @@ export class LivelyRing extends PIXI.Container {
     super.destroy({ children: true, ...(options ?? {}) });
   }
 }
+
+/**
+ * Counts for the debug recorder (see debug-recorder.js): layers by design, bands, emitters and their
+ * particles over these rings. Only design ids and numbers, never a layer's `src`. Not for per-frame use.
+ */
+export function ringStats(rings) {
+  const out = {
+    layers: 0, layersByDesign: {}, bandLayers: 0, filteredLayers: 0,
+    emitters: 0, emittersByDesign: {}, emitterPool: 0, particlesAlive: 0, emittersSaturated: 0,
+    spriteSwarms: 0, sprites: 0, shaderProgramsCached: programs.size, emitMax: EMIT_MAX
+  };
+  for (const ring of rings) {
+    if (!ring || ring.destroyed) continue;
+    for (const layer of ring.layers ?? []) {
+      if (!layer || layer.destroyed) continue;
+      const design = DESIGNS[layer.cfg?.design] || layer.cfg?.design === CUSTOM ? layer.cfg.design : "unknown";
+      out.layers++;
+      out.layersByDesign[design] = (out.layersByDesign[design] ?? 0) + 1;
+      if (layer.band) out.bandLayers++;
+      if (layer.filters?.length) out.filteredLayers++;
+      for (const sw of layer.swarms ?? []) {
+        const n = sw.items?.length ?? 0;
+        if (sw.def?.mode === "emit") {
+          const alive = n - (sw.free?.length ?? 0);
+          out.emitters++;
+          out.emittersByDesign[design] = (out.emittersByDesign[design] ?? 0) + 1;
+          out.emitterPool += n;
+          out.particlesAlive += alive;
+          if (n >= EMIT_MAX) out.emittersSaturated++;
+        } else {
+          out.spriteSwarms++;
+          out.sprites += n;
+        }
+      }
+    }
+  }
+  return out;
+}

@@ -13,9 +13,10 @@ import {
 import { MODULE_ID } from "./constants.js";
 import {
   canUse, partners, partnerModules, setRing, clearRing, tokenRing, ringTextures,
-  actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing, presets, savePreset, deletePreset
+  actorTokens, baseActor, prototypeRing, setActorRing, clearActorRing, presets, savePreset, deletePreset, noteError
 } from "./main.js";
 import { exportRing, importRing } from "./transfer.js";
+import { crumb } from "./debug-recorder.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -105,6 +106,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
    */
   static open({ actor = null, token = null } = {}) {
     if (!canUse()) {
+      crumb("app.open", { denied: true });
       ui.notifications.warn(game.i18n.localize("DXLT.App.NotAllowed"));
       return null;
     }
@@ -112,6 +114,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     token = token?.object ?? token;               // a TokenDocument -> its Token (kept as a document when off the canvas)
     if (token && !docOf(token)?.isOwner) token = null;
     // Every open starts from the ring of whatever it was opened for, never from what was left in the window.
+    crumb("app.open", { subject: actor ? "actor" : token ? "token" : "selection", reused: !!this.instance });
     if (this.instance) this.instance.setSubject({ actor, token });
     else this.instance = new this({ actor, token });
     // Only a window that is already on screen has an element to raise; a new one opens on top anyway.
@@ -487,6 +490,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     this._importing = true;
     try {
       const result = await importRing(file);
+      crumb("transfer.import", { layers: result.cfg.layers.length, uploaded: result.uploaded, skipped: result.skipped.length });
       this.#setConfig(result.cfg);
       const name = LivelyTokensConfig.#freeName(result.name);
       this.presetId = await savePreset(name, result.cfg);
@@ -498,6 +502,8 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
       this.render({ parts: ["main"] });
     } catch (err) {
       console.error(`${MODULE_ID} | import failed`, err);
+      noteError("import");
+      crumb("transfer.importFailed", {});
       ui.notifications.error(game.i18n.format("DXLT.Transfer.ImportFailed", { error: err.message }));
     } finally {
       this._importing = false;
@@ -647,10 +653,13 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     } catch (_) { return; }
     if (name === null || name === undefined) return;
     try {
-      const { file } = await exportRing(cfg, name);
+      const { file, missing } = await exportRing(cfg, name);
+      crumb("transfer.export", { layers: cfg.layers.length, notEmbedded: missing.length });
       ui.notifications.info(game.i18n.format("DXLT.Transfer.Exported", { file }));
     } catch (err) {
       console.error(`${MODULE_ID} | export failed`, err);
+      noteError("export");
+      crumb("transfer.exportFailed", {});
       ui.notifications.error(game.i18n.localize("DXLT.Transfer.ExportFailed"));
     }
   }
@@ -661,6 +670,7 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
 
   static async #onApply() {
     const cfg = normalizeConfig(this.cfg);
+    crumb("app.apply", { target: this.actor ? "actor" : "selection", layers: cfg.layers.length, prototype: this.prototype });
     if (cfg.layers.some(l => l.design === CUSTOM && !l.src)) {
       return ui.notifications.warn(game.i18n.localize("DXLT.App.NoImage"));
     }

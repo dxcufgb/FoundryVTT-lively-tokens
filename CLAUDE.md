@@ -12,6 +12,7 @@ prototype token), edited in the **Animated Border** window. No build step and no
 - `scripts/config-app.js`, `templates/config.hbs`, `styles/lively-tokens.css` – the Animated Border window (ApplicationV2) with its own `PIXI.Application` preview.
 - `scripts/transfer.js` – `.lively-ring.json` export/import (format `dxcufgbs-lively-tokens.ring`, `FORMAT_VERSION` 1) with embedded images, uploaded on import to `worlds/<world>/dxcufgbs-lively-tokens/imported/`.
 - `scripts/constants.js` – `MODULE_ID`, `FLAG` (`"ring"`).
+- `scripts/debug-recorder.js` – optional integration with Dxcufgb's Debug Recorder (`dxcufgbs-debug-recorder`, not a dependency): `registerDebugRecorder(snapshot)` (called at init; connects on the recorder's ready hook or at our init / ready, registers once) and `crumb(key, data)` (no-op unless recording, never throws). The snapshot is `debugSnapshot` in `main.js` (with `ringStats` from `ring.js`); breadcrumb keys are `area.action`.
 - `textures/` – Kenney Particle Pack sheets (CC0): `smoke`, `flames`, `stars`, `twirls`, `rune` (`SHEETS` in `ring.js`).
 - `.github/workflows/ci.yml` / `release.yml` – thin callers of `dxcufgb/foundry-module-ci` (checks, packaging, release); identical in every module, do not edit here.
 
@@ -29,4 +30,5 @@ prototype token), edited in the **Animated Border** window. No build step and no
 - **Escaping**: templates use `{{ }}` only; dialog HTML built in code goes through `escapeHTML`.
 - **Setting scopes**: `playersCanUse` and `autoRings` are `world`; `enabled`, `quality` and `lastConfig` are `client`.
 - **Stored data**: design ids, style ids and layer field names are saved in token flags, prototype tokens, presets and exported files; renaming one silently falls back to the first style or the default design. `normalizeConfig` also accepts a bare single layer (the 1.0 format); keep that.
+- **Debug recorder**: the debug-recorder integration is optional; snapshot/breadcrumb data must never contain names, free text, image paths or URLs (no layer `src`, token or actor names, preset names, file names). Counts, booleans, our own design ids and other modules' ids only; document ids only as `docId`. `debugSnapshot` / `ringStats` are not per-frame code.
 - Rings sit right after the token's void mesh (see `placeRing`): moving them elsewhere puts them under the token art or above bars and nameplates.
