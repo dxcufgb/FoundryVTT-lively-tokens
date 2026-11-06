@@ -26,6 +26,7 @@ function api() {
   return recorder ?? game.modules?.get(RECORDER_ID)?.api ?? null;
 }
 
+/** Register our snapshot with the recorder's API `rec` (once; a bad or missing API is ignored). */
 function connect(rec) {
   if (recorder || !rec || typeof rec.register !== "function") return;
   try {
