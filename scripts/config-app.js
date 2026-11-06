@@ -490,10 +490,10 @@ export class LivelyTokensConfig extends HandlebarsApplicationMixin(ApplicationV2
     this._importing = true;
     try {
       const result = await importRing(file);
-      crumb("transfer.import", { layers: result.cfg.layers.length, uploaded: result.uploaded, skipped: result.skipped.length });
       this.#setConfig(result.cfg);
       const name = LivelyTokensConfig.#freeName(result.name);
       this.presetId = await savePreset(name, result.cfg);
+      crumb("transfer.import", { layers: result.cfg.layers.length, uploaded: result.uploaded, skipped: result.skipped.length });
       ui.notifications.info(game.i18n.format("DXLT.Transfer.Imported", { name, n: result.uploaded }));
       if (result.skipped.length) {
         ui.notifications.warn(game.i18n.format(game.user.can("FILES_UPLOAD") ? "DXLT.Transfer.ImageFailed" : "DXLT.Transfer.NoUploadImport",
