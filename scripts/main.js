@@ -37,6 +37,7 @@ const state = {
   tokens: new Set(),      // Token placeables that currently carry a ring
   ticking: false,
   texturesFailed: false,  // the shared textures' load rejected (for the debug snapshot)
+  textureSheetsFailed: 0, // texture sheets that could not be loaded (loadTextures goes on without them)
   partners: []            // tool buttons of other animated-ring/border modules folded into our window
 };
 export const partners = () => state.partners;
@@ -92,7 +93,8 @@ function debugSnapshot() {
     ...ringStats(tokens.map(t => t._dxltRing)),
     texturesLoaded: !!state.textures,
     texturesLoading: !state.textures && !!state.loading && !state.texturesFailed,
-    texturesFailed: state.texturesFailed,
+    texturesFailed: state.texturesFailed || state.textureSheetsFailed > 0,
+    textureSheetsFailed: state.textureSheetsFailed,
     textureGroups: state.textures ? Object.keys(state.textures).length : 0,
     autoRingSystemSupported: game.system?.id === "dnd5e",
     partnerToolsFolded: state.partners.length,
@@ -154,9 +156,24 @@ export function partnerModules() {
 /*  Rings on tokens                             */
 /* -------------------------------------------- */
 
+/** A texture sheet failed to load: loadTextures carries on without it, the debug snapshot counts it. */
+function sheetFailed() {
+  state.textureSheetsFailed++;
+  noteError("textureSheet");
+}
+
 export async function textures() {
   if (state.textures) return state.textures;
-  state.loading ??= loadTextures(`modules/${MODULE_ID}/`, src => foundry.canvas.loadTexture(src));
+  state.loading ??= loadTextures(`modules/${MODULE_ID}/`, src => foundry.canvas.loadTexture(src).then(
+    tex => {
+      if (!tex) sheetFailed();
+      return tex;
+    },
+    err => {
+      sheetFailed();
+      throw err;
+    }
+  ));
   try {
     state.textures = await state.loading;
   } catch (err) {
