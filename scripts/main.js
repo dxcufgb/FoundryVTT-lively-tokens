@@ -36,6 +36,7 @@ const state = {
   loading: null,
   tokens: new Set(),      // Token placeables that currently carry a ring
   ticking: false,
+  texturesFailed: false,  // the shared textures' load rejected (for the debug snapshot)
   partners: []            // tool buttons of other animated-ring/border modules folded into our window
 };
 export const partners = () => state.partners;
@@ -90,7 +91,8 @@ function debugSnapshot() {
     ringedTokensSkippedHidden: tokens.filter(t => !t.visible || !t.renderable).length,
     ...ringStats(tokens.map(t => t._dxltRing)),
     texturesLoaded: !!state.textures,
-    texturesLoading: !state.textures && !!state.loading,
+    texturesLoading: !state.textures && !!state.loading && !state.texturesFailed,
+    texturesFailed: state.texturesFailed,
     textureGroups: state.textures ? Object.keys(state.textures).length : 0,
     autoRingSystemSupported: game.system?.id === "dnd5e",
     partnerToolsFolded: state.partners.length,
@@ -158,6 +160,7 @@ export async function textures() {
   try {
     state.textures = await state.loading;
   } catch (err) {
+    state.texturesFailed = true;
     noteError("textures");
     crumb("textures.failed", {});
     throw err;
