@@ -23,9 +23,10 @@
  */
 
 import { MODULE_ID, FLAG } from "./constants.js";
-import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing, insertAbove } from "./ring.js";
+import { DESIGNS, normalizeConfig, loadTextures, customSources, LivelyRing, insertAbove, ringStats } from "./ring.js";
 import { LivelyTokensConfig } from "./config-app.js";
 import { exportRing, importRing } from "./transfer.js";
+import { registerDebugRecorder, crumb, noteError, errorCounts } from "./debug-recorder.js";
 
 export { MODULE_ID, FLAG };
 const TOOL = "dxcufgbs-lively-tokens";
@@ -35,6 +36,8 @@ const state = {
   loading: null,
   tokens: new Set(),      // Token placeables that currently carry a ring
   ticking: false,
+  texturesFailed: false,  // the shared textures' load rejected (for the debug snapshot)
+  textureSheetsFailed: 0, // texture sheets that could not be loaded (loadTextures goes on without them)
   partners: []            // tool buttons of other animated-ring/border modules folded into our window
 };
 export const partners = () => state.partners;
@@ -69,7 +72,38 @@ Hooks.once("init", () => {
 
   const mod = game.modules.get(MODULE_ID);
   if (mod) mod.api = { open: opts => LivelyTokensConfig.open(opts), setRing, clearRing, setActorRing, clearActorRing, presets, exportRing, importRing, designs: DESIGNS };
+  registerDebugRecorder(debugSnapshot);
 });
+
+/**
+ * What the Debug Recorder gets from this module (optional, see debug-recorder.js): counts, flags and
+ * our own design ids only. The recorder records versions and settings itself.
+ */
+function debugSnapshot() {
+  const tokens = [...state.tokens].filter(t => !t.destroyed && t._dxltRing && !t._dxltRing.destroyed);
+  const own = tokens.filter(t => t.document?.flags?.[MODULE_ID]?.[FLAG]).length;
+  return {
+    canvasReady: !!canvas?.ready,
+    rendering: !!canvas?.ready && game.settings.get(MODULE_ID, "enabled"),
+    tickerRunning: state.ticking,
+    ringedTokens: tokens.length,
+    ringedTokensOwnRing: own,
+    ringedTokensAutoRing: tokens.length - own,
+    ringedTokensSkippedHidden: tokens.filter(t => !t.visible || !t.renderable).length,
+    ...ringStats(tokens.map(t => t._dxltRing)),
+    texturesLoaded: !!state.textures,
+    texturesLoading: !state.textures && !!state.loading && !state.texturesFailed,
+    texturesFailed: state.texturesFailed || state.textureSheetsFailed > 0,
+    textureSheetsFailed: state.textureSheetsFailed,
+    textureGroups: state.textures ? Object.keys(state.textures).length : 0,
+    autoRingSystemSupported: game.system?.id === "dnd5e",
+    partnerToolsFolded: state.partners.length,
+    partnerModules: partnerModules().map(m => m.id),
+    configWindowOpen: !!LivelyTokensConfig.instance?.rendered,
+    savedEffects: presets().length,
+    errors: errorCounts()
+  };
+}
 
 export function canUse() {
   return game.user.isGM || game.settings.get(MODULE_ID, "playersCanUse");
@@ -122,10 +156,32 @@ export function partnerModules() {
 /*  Rings on tokens                             */
 /* -------------------------------------------- */
 
+/** A texture sheet failed to load: loadTextures carries on without it, the debug snapshot counts it. */
+function sheetFailed() {
+  state.textureSheetsFailed++;
+  noteError("textureSheet");
+}
+
 export async function textures() {
   if (state.textures) return state.textures;
-  state.loading ??= loadTextures(`modules/${MODULE_ID}/`, src => foundry.canvas.loadTexture(src));
-  state.textures = await state.loading;
+  state.loading ??= loadTextures(`modules/${MODULE_ID}/`, src => foundry.canvas.loadTexture(src).then(
+    tex => {
+      if (!tex) sheetFailed();
+      return tex;
+    },
+    err => {
+      sheetFailed();
+      throw err;
+    }
+  ));
+  try {
+    state.textures = await state.loading;
+  } catch (err) {
+    state.texturesFailed = true;
+    noteError("textures");
+    crumb("textures.failed", {});
+    throw err;
+  }
   return state.textures;
 }
 
@@ -137,7 +193,11 @@ export async function ringTextures(cfg) {
   const custom = {};
   await Promise.all(srcs.map(async src => {
     try { custom[src] = await foundry.canvas.loadTexture(src); }
-    catch (err) { console.warn(`${MODULE_ID} | image ${src} could not be loaded`, err); }
+    catch (err) {
+      console.warn(`${MODULE_ID} | image ${src} could not be loaded`, err);
+      noteError("customImages");
+      crumb("ring.customImageFailed", {});      // fallback: the layer is drawn without its image
+    }
   }));
   return { ...base, custom };
 }
@@ -209,7 +269,11 @@ async function syncToken(token) {
   if (ring?.destroyed) ring = token._dxltRing = null;
 
   if (!flag) {
-    if (ring) { ring.destroy(); token._dxltRing = null; }
+    if (ring) {
+      ring.destroy();
+      token._dxltRing = null;
+      crumb("ring.remove", { docId: token.document.id });
+    }
     state.tokens.delete(token);
     return;
   }
@@ -222,6 +286,10 @@ async function syncToken(token) {
   if (token._dxltRing && !token._dxltRing.destroyed) token._dxltRing.destroy();
   ring = new LivelyRing(cfg, tex, quality());
   token._dxltRing = ring;
+  crumb("ring.build", {
+    docId: token.document.id, layers: cfg.layers.length,
+    auto: !token.document.flags?.[MODULE_ID]?.[FLAG], designs: cfg.layers.map(l => l.design).join(",")
+  });
   state.tokens.add(token);
   layout(token);
   startTicker();
@@ -257,6 +325,7 @@ function layout(token) {
 
 function refreshAll(rebuild = false) {
   if (!canvas?.ready) return;
+  crumb("rings.refreshAll", { rebuild, tokens: canvas.tokens.placeables.length });
   for (const token of canvas.tokens.placeables) {
     if (rebuild && token._dxltRing) { token._dxltRing.destroy(); token._dxltRing = null; }
     syncToken(token);
@@ -272,7 +341,10 @@ Hooks.on("destroyToken", token => {
   state.tokens.delete(token);
   token._dxltRing = null;             // the ring is destroyed with the token's children
 });
-Hooks.on("canvasTearDown", () => state.tokens.clear());
+Hooks.on("canvasTearDown", () => {
+  crumb("canvas.tearDown", { ringedTokens: state.tokens.size });
+  state.tokens.clear();
+});
 // Class, species or background changed (e.g. an import finishing): refresh the automatic ring.
 for (const hook of ["createItem", "updateItem", "deleteItem"]) {
   Hooks.on(hook, item => {
@@ -322,8 +394,12 @@ function prototypeOwner(doc, prototype) {
 
 export async function setRing(token, cfg, { prototype = false } = {}) {
   const doc = docOf(token);
-  if (!doc?.isOwner) return false;
+  if (!doc?.isOwner) {
+    crumb("ring.set", { docId: doc?.id ?? null, denied: true });
+    return false;
+  }
   const data = normalizeConfig(cfg);
+  crumb("ring.set", { docId: doc.id, layers: data.layers.length, prototype: !!prototypeOwner(doc, prototype) });
   await doc.update({ [`flags.${MODULE_ID}.${FLAG}`]: data });
   await prototypeOwner(doc, prototype)?.update({ [`prototypeToken.flags.${MODULE_ID}.${FLAG}`]: data });
   return true;
@@ -334,7 +410,11 @@ const cleared = (prefix = "") => ({ [`${prefix}flags.${MODULE_ID}.-=${FLAG}`]: n
 
 export async function clearRing(token, { prototype = false } = {}) {
   const doc = docOf(token);
-  if (!doc?.isOwner) return false;
+  if (!doc?.isOwner) {
+    crumb("ring.clear", { docId: doc?.id ?? null, denied: true });
+    return false;
+  }
+  crumb("ring.clear", { docId: doc.id, prototype: !!prototypeOwner(doc, prototype) });
   await doc.update(cleared());
   await prototypeOwner(doc, prototype)?.update(cleared("prototypeToken."));
   return true;
@@ -366,11 +446,13 @@ export async function savePreset(name, cfg) {
   const next = old ? list.map(p => (p === old ? entry : p)) : [...list, entry];
   next.sort((a, b) => a.name.localeCompare(b.name));
   await game.user.setFlag(MODULE_ID, "presets", next);
+  crumb("preset.save", { replaced: !!old, count: next.length, layers: entry.cfg.layers.length });
   return entry.id;
 }
 
 export async function deletePreset(id) {
-  await game.user.setFlag(MODULE_ID, "presets", presets().filter(p => p.id !== id));
+  const next = presets().filter(p => p.id !== id);
+  await game.user.setFlag(MODULE_ID, "presets", next);
 }
 
 /** The world actor behind an actor (an unlinked token's synthetic actor stores its prototype there). */
@@ -396,6 +478,7 @@ export function prototypeRing(actor, { auto = true } = {}) {
 export async function setActorRing(actor, cfg, { prototype = true } = {}) {
   const data = normalizeConfig(cfg);
   const tokens = actorTokens(actor);
+  crumb("actorRing.set", { docId: actor?.id ?? null, tokens: tokens.length, layers: data.layers.length, prototype });
   await Promise.all(tokens.map(t => setRing(t, data)));
   const base = baseActor(actor);
   // A linked token already put it on its character's prototype token (see setRing).
@@ -406,6 +489,7 @@ export async function setActorRing(actor, cfg, { prototype = true } = {}) {
 
 export async function clearActorRing(actor, { prototype = true } = {}) {
   const tokens = actorTokens(actor);
+  crumb("actorRing.clear", { docId: actor?.id ?? null, tokens: tokens.length, prototype });
   await Promise.all(tokens.map(t => clearRing(t)));
   const base = baseActor(actor);
   // A linked token already put it on its character's prototype token (see setRing).
